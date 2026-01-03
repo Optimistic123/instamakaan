@@ -198,6 +198,9 @@ frontend:
       - working: true
         agent: "main"
         comment: "Redirects to login when not authenticated"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Protected routes working correctly. Accessing /admin without authentication properly redirects to /auth/login. After login, admin routes are accessible. After logout, routes are protected again."
 
   - task: "Auth Context"
     implemented: true
