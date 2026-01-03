@@ -185,7 +185,12 @@ const OwnerDashboardPage = () => {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-foreground truncate">{property.title}</p>
+                      <button
+                        onClick={() => setPreviewPropertyId(property.id)}
+                        className="font-medium text-primary hover:underline truncate text-left block w-full"
+                      >
+                        {property.title}
+                      </button>
                       <p className="text-sm text-muted-foreground flex items-center gap-1">
                         <MapPin className="w-3 h-3" /> {property.location}
                       </p>
