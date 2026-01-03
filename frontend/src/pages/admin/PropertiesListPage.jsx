@@ -277,7 +277,7 @@ const PropertiesListPage = () => {
                               <AlertDialogHeader>
                                 <AlertDialogTitle>Delete Property</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                  Are you sure you want to delete "{property.title}"? This action cannot be undone.
+                                  Are you sure you want to delete &quot;{property.title}&quot;? This action cannot be undone.
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
