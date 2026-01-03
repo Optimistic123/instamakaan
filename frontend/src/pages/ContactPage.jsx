@@ -277,8 +277,12 @@ const ContactPage = () => {
                           />
                         </div>
 
-                        <Button type="submit" variant="teal" size="lg" className="w-full sm:w-auto">
-                          <Send className="w-4 h-4 mr-2" />
+                        <Button type="submit" variant="teal" size="lg" className="w-full sm:w-auto" disabled={submitting}>
+                          {submitting ? (
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          ) : (
+                            <Send className="w-4 h-4 mr-2" />
+                          )}
                           Send Message
                         </Button>
                       </form>
