@@ -7,7 +7,6 @@ import {
   UserCheck,
   Phone,
   Mail,
-  MessageSquare,
   Clock,
   CheckCircle2,
   Calendar,
@@ -95,31 +94,6 @@ const AgentInquiriesPage = () => {
       toast.error('Failed to update status');
     } finally {
       setSubmitting(false);
-    }
-  };
-
-  const openInquiryDrawer = (inquiry) => {
-    setSelectedInquiryId(inquiry.id);
-  };
-      } else {
-        throw new Error('Failed to add log');
-      }
-    } catch (error) {
-      console.error('Error adding log:', error);
-      toast.error('Failed to add conversation log');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const openInquiryDetail = async (inquiry) => {
-    try {
-      const response = await fetch(`${BACKEND_URL}/api/inquiries/${inquiry.id}`);
-      const data = await response.json();
-      setSelectedInquiry(data);
-      setIsDetailOpen(true);
-    } catch (error) {
-      console.error('Error fetching inquiry detail:', error);
     }
   };
 
@@ -231,7 +205,12 @@ const AgentInquiriesPage = () => {
                     <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <h3 className="font-semibold text-foreground">{inquiry.name}</h3>
+                          <button
+                            onClick={() => setSelectedInquiryId(inquiry.id)}
+                            className="font-semibold text-primary hover:underline text-left"
+                          >
+                            {inquiry.name}
+                          </button>
                           <span className={cn(
                             'inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium',
                             statusInfo.color
@@ -281,7 +260,7 @@ const AgentInquiriesPage = () => {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => openInquiryDetail(inquiry)}
+                          onClick={() => setSelectedInquiryId(inquiry.id)}
                         >
                           <Eye className="w-4 h-4 mr-1" /> Details
                         </Button>
@@ -315,129 +294,14 @@ const AgentInquiriesPage = () => {
         </CardContent>
       </Card>
 
-      {/* Inquiry Detail Dialog */}
-      <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Inquiry Details</DialogTitle>
-          </DialogHeader>
-          {selectedInquiry && (
-            <div className="space-y-6">
-              {/* Contact Info */}
-              <div className="p-4 bg-secondary/50 rounded-xl">
-                <h3 className="font-semibold text-foreground mb-3">{selectedInquiry.name}</h3>
-                <div className="grid sm:grid-cols-2 gap-3 text-sm">
-                  <div className="flex items-center gap-2">
-                    <Phone className="w-4 h-4 text-primary" />
-                    <a href={`tel:${selectedInquiry.phone}`} className="hover:text-primary">
-                      {selectedInquiry.phone}
-                    </a>
-                  </div>
-                  {selectedInquiry.email && (
-                    <div className="flex items-center gap-2">
-                      <Mail className="w-4 h-4 text-primary" />
-                      <a href={`mailto:${selectedInquiry.email}`} className="hover:text-primary">
-                        {selectedInquiry.email}
-                      </a>
-                    </div>
-                  )}
-                </div>
-                {selectedInquiry.message && (
-                  <p className="text-sm text-muted-foreground mt-3 pt-3 border-t border-border">
-                    {selectedInquiry.message}
-                  </p>
-                )}
-              </div>
-
-              {/* Status Update */}
-              <div className="p-4 bg-muted/30 rounded-xl">
-                <Label className="text-sm font-medium mb-3 block">Quick Status Update</Label>
-                <div className="flex flex-wrap gap-2">
-                  {statusWorkflow.map((status) => {
-                    const StatusIcon = status.icon;
-                    const isActive = selectedInquiry.status === status.value;
-                    return (
-                      <Button
-                        key={status.value}
-                        variant={isActive ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => !isActive && updateInquiryStatus(selectedInquiry.id, status.value)}
-                        disabled={submitting || isActive}
-                        className={cn(isActive && status.color)}
-                      >
-                        <StatusIcon className="w-4 h-4 mr-1" />
-                        {status.label}
-                      </Button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Conversation Logs */}
-              <div>
-                <Label className="text-sm font-medium mb-3 block">Conversation History</Label>
-                <div className="space-y-3 max-h-60 overflow-y-auto">
-                  {selectedInquiry.conversation_logs?.length > 0 ? (
-                    selectedInquiry.conversation_logs.map((log, index) => (
-                      <div key={index} className="p-3 bg-muted/50 rounded-lg">
-                        <p className="text-sm text-foreground">{log.message}</p>
-                        <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
-                          <span>{log.agent_name}</span>
-                          <span>{format(new Date(log.timestamp), 'MMM d, h:mm a')}</span>
-                        </div>
-                        {log.status_change && (
-                          <span className="text-xs text-primary mt-1 block">
-                            Status changed to: {log.status_change.replace('_', ' ')}
-                          </span>
-                        )}
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-sm text-muted-foreground text-center py-4">
-                      No conversation logs yet
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Add Log Form */}
-              <div className="space-y-3 pt-4 border-t border-border">
-                <Label className="text-sm font-medium">Add Conversation Log</Label>
-                <Textarea
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  placeholder="Enter conversation notes..."
-                  rows={3}
-                />
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <Select value={newStatus} onValueChange={setNewStatus}>
-                    <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="Update status (optional)" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {statusWorkflow.map((status) => (
-                        <SelectItem key={status.value} value={status.value}>{status.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Button
-                    variant="teal"
-                    onClick={addConversationLog}
-                    disabled={!newMessage.trim() || submitting}
-                  >
-                    {submitting ? (
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    ) : (
-                      <Send className="w-4 h-4 mr-2" />
-                    )}
-                    Add Log
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* Inquiry Detail Drawer */}
+      <InquiryDetailDrawer
+        inquiryId={selectedInquiryId}
+        agentId={agentId}
+        isOpen={!!selectedInquiryId}
+        onClose={() => setSelectedInquiryId(null)}
+        onUpdate={fetchAgentInquiries}
+      />
     </div>
   );
 };
