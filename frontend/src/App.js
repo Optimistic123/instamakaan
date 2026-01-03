@@ -19,6 +19,10 @@ import DashboardPage from "@/pages/admin/DashboardPage";
 import PropertiesListPage from "@/pages/admin/PropertiesListPage";
 import PropertyFormPage from "@/pages/admin/PropertyFormPage";
 import InquiriesPage from "@/pages/admin/InquiriesPage";
+import OwnersPage from "@/pages/admin/OwnersPage";
+import OwnerDashboardPage from "@/pages/admin/OwnerDashboardPage";
+import AgentsPage from "@/pages/admin/AgentsPage";
+import AgentInquiriesPage from "@/pages/admin/AgentInquiriesPage";
 
 function App() {
   return (
@@ -42,6 +46,10 @@ function App() {
             <Route path="properties" element={<PropertiesListPage />} />
             <Route path="properties/new" element={<PropertyFormPage />} />
             <Route path="properties/:id/edit" element={<PropertyFormPage />} />
+            <Route path="owners" element={<OwnersPage />} />
+            <Route path="owners/:ownerId/dashboard" element={<OwnerDashboardPage />} />
+            <Route path="agents" element={<AgentsPage />} />
+            <Route path="agents/:agentId/inquiries" element={<AgentInquiriesPage />} />
             <Route path="inquiries" element={<InquiriesPage />} />
           </Route>
         </Routes>
