@@ -450,6 +450,21 @@ frontend:
         agent: "main"
         comment: "Shows Total Owners and Active Agents stats"
 
+  - task: "Role-based Dashboard System"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Role-based authentication and dashboard routing implemented"
+      - working: true
+        agent: "testing"
+        comment: "✅ COMPREHENSIVE TESTING COMPLETE: All role-based dashboards working perfectly. (1) Admin Dashboard: Redirects to /admin, full navigation (Dashboard, Properties, Owners, Agents, Inquiries), user shows 'Admin User'/'Admin' role, all features accessible. (2) Owner Dashboard: Redirects to /owner (NOT /admin), Owner Portal branding, navigation (Dashboard/My Properties/Earnings), shows stats (3 properties), user shows 'Rajesh Kumar'/'Owner' role, logout works. (3) Agent Dashboard: Redirects to /agent (NOT /admin), Agent Portal branding, shows assigned inquiries with status workflow (Assigned→Talked→Visit Scheduled→Visit Confirmed→Closed), 'Mark as [next status]' buttons, user shows 'Amit Singh'/'Agent' role, logout works. (4) Role-based Access Control: Owner/Agent accessing /admin properly redirected to their respective dashboards. All authentication flows, role-based routing, and access control working correctly."
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
