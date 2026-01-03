@@ -354,6 +354,199 @@ async def get_agent_by_id(agent_id: str):
 async def root():
     return {"message": "InstaMakaan API is running"}
 
+# ============== AUTH ROUTES ==============
+
+@api_router.post("/auth/register", response_model=TokenResponse)
+async def register_user(user_data: UserCreate):
+    """Register a new user"""
+    # Check if email already exists
+    existing_user = await db.users.find_one({"email": user_data.email})
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered"
+        )
+    
+    # Create user
+    user_id = str(uuid.uuid4())
+    user = {
+        "id": user_id,
+        "email": user_data.email,
+        "name": user_data.name,
+        "role": user_data.role,
+        "password_hash": get_password_hash(user_data.password),
+        "status": "active",
+        "linked_id": None,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.users.insert_one(user)
+    
+    # Create access token
+    access_token = create_access_token(data={"sub": user_id, "role": user["role"]})
+    
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": {
+            "id": user["id"],
+            "email": user["email"],
+            "name": user["name"],
+            "role": user["role"],
+            "status": user["status"],
+            "linked_id": user["linked_id"],
+            "created_at": user["created_at"]
+        }
+    }
+
+@api_router.post("/auth/login", response_model=TokenResponse)
+async def login_user(credentials: UserLogin):
+    """Login user and return JWT token"""
+    user = await db.users.find_one({"email": credentials.email}, {"_id": 0})
+    
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password"
+        )
+    
+    if not verify_password(credentials.password, user["password_hash"]):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password"
+        )
+    
+    if user.get("status") != "active":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Account is inactive"
+        )
+    
+    # Create access token
+    access_token = create_access_token(data={"sub": user["id"], "role": user["role"]})
+    
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": {
+            "id": user["id"],
+            "email": user["email"],
+            "name": user["name"],
+            "role": user["role"],
+            "status": user["status"],
+            "linked_id": user.get("linked_id"),
+            "created_at": user["created_at"]
+        }
+    }
+
+@api_router.get("/auth/me", response_model=UserResponse)
+async def get_current_user_info(current_user: dict = Depends(get_current_active_user)):
+    """Get current user information"""
+    return {
+        "id": current_user["id"],
+        "email": current_user["email"],
+        "name": current_user["name"],
+        "role": current_user["role"],
+        "status": current_user["status"],
+        "linked_id": current_user.get("linked_id"),
+        "created_at": current_user["created_at"]
+    }
+
+@api_router.put("/auth/change-password")
+async def change_password(
+    old_password: str,
+    new_password: str,
+    current_user: dict = Depends(get_current_active_user)
+):
+    """Change user password"""
+    if not verify_password(old_password, current_user["password_hash"]):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Current password is incorrect"
+        )
+    
+    new_hash = get_password_hash(new_password)
+    await db.users.update_one(
+        {"id": current_user["id"]},
+        {"$set": {"password_hash": new_hash, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    return {"message": "Password changed successfully"}
+
+@api_router.get("/auth/users")
+async def get_all_users(current_user: dict = Depends(require_role(["admin"]))):
+    """Get all users (admin only)"""
+    users = await db.users.find({}, {"_id": 0, "password_hash": 0}).to_list(1000)
+    return users
+
+@api_router.post("/auth/users", response_model=UserResponse)
+async def create_user_by_admin(
+    user_data: UserCreate,
+    linked_id: Optional[str] = None,
+    current_user: dict = Depends(require_role(["admin"]))
+):
+    """Create a new user (admin only) - can link to owner or agent"""
+    # Check if email already exists
+    existing_user = await db.users.find_one({"email": user_data.email})
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered"
+        )
+    
+    # If linking to owner or agent, verify they exist
+    if linked_id:
+        if user_data.role == "owner":
+            owner = await db.owners.find_one({"id": linked_id})
+            if not owner:
+                raise HTTPException(status_code=404, detail="Owner not found")
+        elif user_data.role == "agent":
+            agent = await db.agents.find_one({"id": linked_id})
+            if not agent:
+                raise HTTPException(status_code=404, detail="Agent not found")
+    
+    # Create user
+    user_id = str(uuid.uuid4())
+    user = {
+        "id": user_id,
+        "email": user_data.email,
+        "name": user_data.name,
+        "role": user_data.role,
+        "password_hash": get_password_hash(user_data.password),
+        "status": "active",
+        "linked_id": linked_id,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.users.insert_one(user)
+    
+    return {
+        "id": user["id"],
+        "email": user["email"],
+        "name": user["name"],
+        "role": user["role"],
+        "status": user["status"],
+        "linked_id": user["linked_id"],
+        "created_at": user["created_at"]
+    }
+
+@api_router.delete("/auth/users/{user_id}")
+async def delete_user(user_id: str, current_user: dict = Depends(require_role(["admin"]))):
+    """Delete a user (admin only)"""
+    if user_id == current_user["id"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot delete your own account"
+        )
+    
+    result = await db.users.delete_one({"id": user_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return {"message": "User deleted successfully"}
+
 # Status routes
 @api_router.post("/status", response_model=StatusCheck)
 async def create_status_check(input: StatusCheckCreate):
