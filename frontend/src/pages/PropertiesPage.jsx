@@ -274,16 +274,26 @@ const PropertiesPage = () => {
 
           {/* Property Grid */}
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredProperties.map((property) => (
+            {loading ? (
+              <div className="col-span-full flex items-center justify-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              </div>
+            ) : filteredProperties.length === 0 ? (
+              <div className="col-span-full text-center py-12">
+                <Building2 className="w-12 h-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+                <p className="text-muted-foreground">No properties found</p>
+              </div>
+            ) : (
+            filteredProperties.map((property) => (
               <Card key={property.id} className="bg-card border-0 shadow-card overflow-hidden card-elevated group">
                 {/* Image */}
                 <div className="relative aspect-[4/3] overflow-hidden">
                   <img
-                    src={property.image}
+                    src={property.images?.[0] ? (property.images[0].startsWith('http') ? property.images[0] : `${BACKEND_URL}${property.images[0]}`) : 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=600&h=400&fit=crop'}
                     alt={property.title}
                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                   />
-                  {property.isManaged && (
+                  {property.is_managed && (
                     <div className="absolute top-3 left-3 px-3 py-1 bg-primary text-primary-foreground text-xs font-semibold rounded-full">
                       Managed Home
                     </div>
@@ -310,7 +320,7 @@ const PropertiesPage = () => {
 
                   {/* Features */}
                   <div className="flex flex-wrap gap-2 mb-4">
-                    {property.features.slice(0, 3).map((feature) => (
+                    {(property.features || []).slice(0, 3).map((feature) => (
                       <span
                         key={feature}
                         className="text-xs px-2 py-1 bg-secondary rounded-md text-muted-foreground"
@@ -339,8 +349,8 @@ const PropertiesPage = () => {
                   {/* Price & CTAs */}
                   <div className="flex items-center justify-between pt-4 border-t border-border">
                     <div>
-                      <p className="text-xs text-muted-foreground">{property.priceLabel}</p>
-                      <p className="text-lg font-bold text-primary">₹{property.price}<span className="text-sm font-normal text-muted-foreground">{property.type !== 'buy' && '/mo'}</span></p>
+                      <p className="text-xs text-muted-foreground">{property.price_label}</p>
+                      <p className="text-lg font-bold text-primary">₹{property.price}<span className="text-sm font-normal text-muted-foreground">{property.property_type !== 'buy' && '/mo'}</span></p>
                     </div>
                     <div className="flex gap-2">
                       <Button variant="outline" size="sm" asChild>
@@ -357,7 +367,8 @@ const PropertiesPage = () => {
                   </div>
                 </CardContent>
               </Card>
-            ))}
+            ))
+            )}
           </div>
         </div>
       </section>
