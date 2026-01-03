@@ -308,6 +308,13 @@ const PropertiesListPage = () => {
           </Table>
         </div>
       </Card>
+
+      {/* Property Preview Drawer */}
+      <PropertyPreviewDrawer
+        propertyId={previewPropertyId}
+        isOpen={!!previewPropertyId}
+        onClose={() => setPreviewPropertyId(null)}
+      />
     </div>
   );
 };
