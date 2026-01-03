@@ -42,6 +42,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import PropertyPreviewDrawer from '@/components/admin/PropertyPreviewDrawer';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
