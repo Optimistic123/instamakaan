@@ -181,7 +181,7 @@ const ReferPage = () => {
               Earn in 3 Simple Steps Using Your Referral Code
             </h2>
             <p className="text-base md:text-lg text-muted-foreground max-w-xl mx-auto">
-              It's easy to share the InstaMakaan advantage and get rewarded.
+              It&apos;s easy to share the InstaMakaan advantage and get rewarded.
             </p>
           </div>
 
@@ -213,7 +213,7 @@ const ReferPage = () => {
               InstaMakaan Referral Champions
             </h2>
             <p className="text-base md:text-lg text-muted-foreground max-w-xl mx-auto">
-              See who's earning the most and topping our charts! Will you be next?
+              See who&apos;s earning the most and topping our charts! Will you be next?
             </p>
           </div>
 
