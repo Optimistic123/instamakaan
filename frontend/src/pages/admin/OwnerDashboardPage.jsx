@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import PropertyPreviewDrawer from '@/components/admin/PropertyPreviewDrawer';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
