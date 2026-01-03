@@ -53,12 +53,40 @@ const ContactPage = () => {
     message: '',
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Mock form submission
-    setIsSubmitted(true);
-    toast.success('Message sent successfully! We will get back to you soon.');
+    setSubmitting(true);
+
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/inquiries`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          subject: formData.subject,
+          message: formData.message,
+          inquiry_type: 'general',
+        }),
+      });
+
+      if (response.ok) {
+        setIsSubmitted(true);
+        toast.success('Message sent successfully! We will get back to you soon.');
+      } else {
+        throw new Error('Failed to submit');
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      toast.error('Failed to send message. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleChange = (field, value) => {
