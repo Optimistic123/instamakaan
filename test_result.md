@@ -143,27 +143,33 @@ backend:
 
   - task: "Owner Dashboard API"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Implemented but needs testing with properties assigned to owner"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: API working correctly. Returns owner dashboard with properties: 0, active: 0, earnings: ₹0. All required fields present: owner, total_properties, active_properties, total_earnings, current_month_earnings, properties, earnings_history"
 
   - task: "Agent Inquiries API"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Implemented but needs testing"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: API working correctly. Returns agent inquiries data with total_inquiries: 1, status_counts: {'assigned': 1}. All required fields present: agent, total_inquiries, status_counts, inquiries"
 
   - task: "Dashboard Stats API (with Owners/Agents)"
     implemented: true
