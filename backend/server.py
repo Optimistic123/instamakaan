@@ -105,6 +105,42 @@ def require_role(allowed_roles: List[str]):
 
 # ============== MODELS ==============
 
+# Auth Models
+class UserBase(BaseModel):
+    email: str
+    name: str
+    role: str = "admin"  # admin, owner, agent
+
+class UserCreate(UserBase):
+    password: str
+
+class UserLogin(BaseModel):
+    email: str
+    password: str
+
+class UserResponse(BaseModel):
+    id: str
+    email: str
+    name: str
+    role: str
+    status: str
+    linked_id: Optional[str] = None  # Links to owner_id or agent_id
+    created_at: datetime
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserResponse
+
+class User(UserBase):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    password_hash: str
+    status: str = "active"  # active, inactive
+    linked_id: Optional[str] = None  # Links to owner_id or agent_id
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
 # Status Check Models
 class StatusCheck(BaseModel):
     model_config = ConfigDict(extra="ignore")
