@@ -50,6 +50,18 @@ const DashboardPage = () => {
       color: 'bg-success/10 text-success',
     },
     {
+      title: 'Total Owners',
+      value: stats?.total_owners || 0,
+      icon: Users,
+      color: 'bg-chart-3/10 text-chart-3',
+    },
+    {
+      title: 'Active Agents',
+      value: stats?.total_agents || 0,
+      icon: Users,
+      color: 'bg-chart-4/10 text-chart-4',
+    },
+    {
       title: 'Total Inquiries',
       value: stats?.total_inquiries || 0,
       icon: MessageSquare,
