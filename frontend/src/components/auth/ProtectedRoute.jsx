@@ -33,17 +33,42 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
 
   // Check role-based access
   if (allowedRoles.length > 0 && !allowedRoles.includes(user?.role)) {
-    // Redirect based on user role
+    // Redirect based on user role to their appropriate dashboard
     if (user?.role === 'owner') {
-      return <Navigate to={`/admin/owners/${user.linked_id}/dashboard`} replace />;
+      return <Navigate to="/owner" replace />;
     } else if (user?.role === 'agent') {
-      return <Navigate to={`/admin/agents/${user.linked_id}/inquiries`} replace />;
+      return <Navigate to="/agent" replace />;
     }
     // Default redirect for unauthorized roles
     return <Navigate to="/admin" replace />;
   }
 
   return children;
+};
+
+/**
+ * RoleBasedRedirect - Redirects users to their appropriate dashboard based on role
+ */
+export const RoleBasedRedirect = () => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Redirect based on role
+  if (user?.role === 'owner') {
+    return <Navigate to="/owner" replace />;
+  } else if (user?.role === 'agent') {
+    return <Navigate to="/agent" replace />;
+  }
+  
+  // Default to admin for admin users
+  return <Navigate to="/admin" replace />;
 };
 
 export default ProtectedRoute;
