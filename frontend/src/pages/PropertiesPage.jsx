@@ -149,10 +149,33 @@ const PropertiesPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [uspIndex, setUspIndex] = useState(0);
   const [favorites, setFavorites] = useState([]);
+  const [properties, setProperties] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchProperties();
+  }, [activeTab]);
+
+  const fetchProperties = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/properties?property_type=${activeTab}&status=active`);
+      if (response.ok) {
+        const data = await response.json();
+        setProperties(data);
+      }
+    } catch (error) {
+      console.error('Error fetching properties:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const content = tabContent[activeTab];
+
   const filteredProperties = properties.filter((p) =>
-    activeTab === 'all' ? true : p.type === activeTab
+    p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    p.location.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const toggleFavorite = (id) => {
