@@ -326,7 +326,12 @@ const OwnersPage = () => {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <span className="text-sm">-</span>
+                      <span className={cn(
+                        'text-sm font-medium',
+                        owner.property_count > 0 ? 'text-primary' : 'text-muted-foreground'
+                      )}>
+                        {owner.property_count || 0}
+                      </span>
                     </TableCell>
                     <TableCell>
                       <span className={cn(
