@@ -97,14 +97,27 @@ const InquiriesPage = () => {
 
   const assignAgent = async (inquiryId, agentId) => {
     try {
-      const response = await fetch(`${BACKEND_URL}/api/inquiries/${inquiryId}/assign?agent_id=${agentId}`, {
-        method: 'PUT',
-      });
-      if (response.ok) {
-        toast.success('Inquiry assigned successfully');
-        fetchInquiries();
+      if (agentId === 'unassign') {
+        // Unassign the agent
+        const response = await fetch(`${BACKEND_URL}/api/inquiries/${inquiryId}/unassign`, {
+          method: 'PUT',
+        });
+        if (response.ok) {
+          toast.success('Agent unassigned successfully');
+          fetchInquiries();
+        } else {
+          throw new Error('Failed to unassign');
+        }
       } else {
-        throw new Error('Failed to assign');
+        const response = await fetch(`${BACKEND_URL}/api/inquiries/${inquiryId}/assign?agent_id=${agentId}`, {
+          method: 'PUT',
+        });
+        if (response.ok) {
+          toast.success('Inquiry assigned successfully');
+          fetchInquiries();
+        } else {
+          throw new Error('Failed to assign');
+        }
       }
     } catch (error) {
       console.error('Error assigning inquiry:', error);
