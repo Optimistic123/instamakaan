@@ -52,6 +52,7 @@ const PropertiesListPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [previewPropertyId, setPreviewPropertyId] = useState(null);
 
   useEffect(() => {
     fetchProperties();
