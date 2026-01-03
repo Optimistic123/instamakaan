@@ -36,7 +36,7 @@ const sidebarItems = [
   {
     name: 'Agents',
     path: '/admin/agents',
-    icon: Users,
+    icon: UserCheck,
   },
   {
     name: 'Inquiries',
