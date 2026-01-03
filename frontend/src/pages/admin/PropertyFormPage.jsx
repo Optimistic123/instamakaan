@@ -102,12 +102,26 @@ const PropertyFormPage = () => {
   const [loading, setLoading] = useState(isEditing);
   const [newFeature, setNewFeature] = useState('');
   const [newAmenity, setNewAmenity] = useState('');
+  const [owners, setOwners] = useState([]);
 
   useEffect(() => {
+    fetchOwners();
     if (isEditing) {
       fetchProperty();
     }
   }, [id]);
+
+  const fetchOwners = async () => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/owners?status=active`);
+      if (response.ok) {
+        const data = await response.json();
+        setOwners(data);
+      }
+    } catch (error) {
+      console.error('Error fetching owners:', error);
+    }
+  };
 
   const fetchProperty = async () => {
     try {
