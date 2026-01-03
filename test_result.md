@@ -310,6 +310,42 @@ metadata:
   test_sequence: 2
   run_ui: true
 
+  - task: "Owner Property Count Fix"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Owner Property Count fix working correctly. All owners return property_count field. Rajesh Kumar correctly shows 2 properties as expected. API at /api/owners includes property count for each owner."
+
+  - task: "Inquiry Unassign API Fix"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Inquiry Unassign API working correctly. PUT /api/inquiries/{inquiry_id}/unassign successfully resets inquiry status to 'new' and sets assigned_agent_id and assigned_agent_name to null as expected."
+
+  - task: "Agent Inquiry Status Update Flow"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Agent Inquiry Status Update Flow working correctly. Successfully tested complete workflow: assigned → talked → visit_scheduled → visit_confirmed → closed. All status transitions work via /api/inquiries/{inquiry_id}/log endpoint."
+
 test_plan:
   current_focus: []
   stuck_tasks: []
@@ -323,3 +359,5 @@ agent_communication:
     message: "✅ BACKEND TESTING COMPLETE: All backend APIs tested and working correctly. Owner CRUD (5/5 tests passed), Agent CRUD (5/5 tests passed), Owner Dashboard API (✅ working), Agent Inquiries API (✅ working), Inquiry Assignment (2/2 tests passed), Dashboard Stats (✅ working). Total: 15/15 tests passed. Backend is fully functional and ready for production."
   - agent: "testing"
     message: "✅ FRONTEND TESTING COMPLETE: Tested all admin panel functionality. CRITICAL ISSUES FOUND: Owners and Agents pages missing Edit/View action buttons in table rows. All other functionality working: Dashboard loads with stats, Owner Dashboard shows properties/earnings, Agent Inquiries page functional, Inquiries assignment works, Property Form owner assignment works perfectly. Need to fix missing action buttons for full CRUD operations."
+  - agent: "testing"
+    message: "✅ ADMIN PANEL FIXES TESTING COMPLETE: All 3 requested fixes verified working correctly. (1) Owner Property Count: All owners return property_count field, Rajesh Kumar shows 2 properties ✅ (2) Inquiry Unassign API: PUT /api/inquiries/{id}/unassign resets status to 'new' and nullifies agent fields ✅ (3) Agent Status Flow: Complete workflow tested assigned→talked→visit_scheduled→visit_confirmed→closed ✅. Total: 26/26 tests passed including comprehensive backend API testing."
