@@ -303,17 +303,20 @@ const OwnersPage = () => {
                 filteredOwners.map((owner) => (
                   <TableRow key={owner.id}>
                     <TableCell>
-                      <div className="flex items-center gap-3">
+                      <Link
+                        to={`/admin/owners/${owner.id}/dashboard`}
+                        className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+                      >
                         <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                           <User className="w-5 h-5 text-primary" />
                         </div>
                         <div>
-                          <p className="font-medium">{owner.name}</p>
+                          <p className="font-medium text-primary hover:underline">{owner.name}</p>
                           <p className="text-xs text-muted-foreground">
                             Since {format(new Date(owner.created_at), 'MMM yyyy')}
                           </p>
                         </div>
-                      </div>
+                      </Link>
                     </TableCell>
                     <TableCell>
                       <div className="space-y-1">
