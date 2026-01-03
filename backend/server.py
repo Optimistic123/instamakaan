@@ -318,6 +318,9 @@ async def get_owners(status: Optional[str] = None, limit: int = 100):
             owner['created_at'] = datetime.fromisoformat(owner['created_at'])
         if isinstance(owner.get('updated_at'), str):
             owner['updated_at'] = datetime.fromisoformat(owner['updated_at'])
+        # Count properties assigned to this owner
+        property_count = await db.properties.count_documents({"owner_id": owner['id']})
+        owner['property_count'] = property_count
     return owners
 
 @api_router.get("/owners/{owner_id}", response_model=Owner)
