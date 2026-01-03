@@ -87,11 +87,6 @@ const AgentInquiriesPage = () => {
       if (response.ok) {
         toast.success(`Status updated to ${status.replace('_', ' ')}`);
         fetchAgentInquiries();
-        if (selectedInquiry && selectedInquiry.id === inquiryId) {
-          const updatedResponse = await fetch(`${BACKEND_URL}/api/inquiries/${inquiryId}`);
-          const updatedInquiry = await updatedResponse.json();
-          setSelectedInquiry(updatedInquiry);
-        }
       } else {
         throw new Error('Failed to update status');
       }
@@ -103,31 +98,9 @@ const AgentInquiriesPage = () => {
     }
   };
 
-  const addConversationLog = async () => {
-    if (!newMessage.trim() || !selectedInquiry) return;
-    
-    setSubmitting(true);
-    try {
-      const params = new URLSearchParams({
-        agent_id: agentId,
-        message: newMessage,
-      });
-      if (newStatus) {
-        params.append('new_status', newStatus);
-      }
-
-      const response = await fetch(`${BACKEND_URL}/api/inquiries/${selectedInquiry.id}/log?${params}`, {
-        method: 'POST',
-      });
-
-      if (response.ok) {
-        toast.success('Log added successfully');
-        setNewMessage('');
-        setNewStatus('');
-        fetchAgentInquiries();
-        const updatedResponse = await fetch(`${BACKEND_URL}/api/inquiries/${selectedInquiry.id}`);
-        const updatedInquiry = await updatedResponse.json();
-        setSelectedInquiry(updatedInquiry);
+  const openInquiryDrawer = (inquiry) => {
+    setSelectedInquiryId(inquiry.id);
+  };
       } else {
         throw new Error('Failed to add log');
       }
