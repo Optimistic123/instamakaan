@@ -24,6 +24,7 @@ const OwnerDashboardPage = () => {
   const { ownerId } = useParams();
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [previewPropertyId, setPreviewPropertyId] = useState(null);
 
   useEffect(() => {
     fetchDashboard();
