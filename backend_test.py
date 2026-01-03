@@ -227,14 +227,149 @@ class APITester:
         else:
             self.log_test("GET /dashboard/stats - Dashboard stats API", False, result)
     
+    def test_owner_property_count_fix(self):
+        """Test Owner Property Count Fix - Verify each owner returns property_count field"""
+        print("\n=== Testing Owner Property Count Fix ===")
+        
+        success, owners = self.test_api_endpoint("GET", "/owners")
+        if success:
+            # Check if all owners have property_count field
+            missing_count = []
+            for owner in owners:
+                if 'property_count' not in owner:
+                    missing_count.append(owner.get('name', 'Unknown'))
+            
+            if missing_count:
+                self.log_test("Owner Property Count Field", False, 
+                             f"Missing property_count field for owners: {missing_count}")
+            else:
+                # Verify Rajesh Kumar has 2 properties as mentioned in review request
+                rajesh_owner = next((o for o in owners if o.get('name') == 'Rajesh Kumar'), None)
+                if rajesh_owner:
+                    expected_count = 2
+                    actual_count = rajesh_owner.get('property_count', 0)
+                    if actual_count == expected_count:
+                        self.log_test("Rajesh Kumar Property Count", True, 
+                                     f"Correctly shows {actual_count} properties")
+                    else:
+                        self.log_test("Rajesh Kumar Property Count", False,
+                                     f"Expected {expected_count}, got {actual_count}")
+                else:
+                    self.log_test("Rajesh Kumar Property Count", False, "Rajesh Kumar not found")
+                
+                # Test all owners have property_count field
+                self.log_test("All Owners Have Property Count", True,
+                             f"All {len(owners)} owners have property_count field")
+        else:
+            self.log_test("Owner Property Count Fix", False, owners)
+    
+    def test_inquiry_unassign_api_fix(self):
+        """Test Inquiry Unassign API Fix - PUT /api/inquiries/{inquiry_id}/unassign"""
+        print("\n=== Testing Inquiry Unassign API Fix ===")
+        
+        # First get inquiries assigned to Amit Singh
+        success, inquiries = self.test_api_endpoint("GET", "/inquiries", 
+                                                   params={"assigned_agent_id": EXISTING_AGENT_ID})
+        if success and inquiries:
+            inquiry_id = inquiries[0]['id']
+            original_status = inquiries[0].get('status')
+            
+            # Test unassign API
+            success, result = self.test_api_endpoint("PUT", f"/inquiries/{inquiry_id}/unassign")
+            if success:
+                self.log_test("PUT /inquiries/{id}/unassign - API Response", True,
+                             result.get('message', 'Unassigned successfully'))
+                
+                # Verify inquiry status reset to "new" and agent fields are null
+                success, updated_inquiry = self.test_api_endpoint("GET", f"/inquiries/{inquiry_id}")
+                if success:
+                    new_status = updated_inquiry.get('status')
+                    assigned_agent_id = updated_inquiry.get('assigned_agent_id')
+                    assigned_agent_name = updated_inquiry.get('assigned_agent_name')
+                    
+                    # Check status reset to "new"
+                    if new_status == "new":
+                        self.log_test("Inquiry Status Reset to New", True, 
+                                     f"Status changed from '{original_status}' to 'new'")
+                    else:
+                        self.log_test("Inquiry Status Reset to New", False,
+                                     f"Expected 'new', got '{new_status}'")
+                    
+                    # Check agent fields are null
+                    if assigned_agent_id is None and assigned_agent_name is None:
+                        self.log_test("Agent Fields Reset to Null", True,
+                                     "assigned_agent_id and assigned_agent_name are null")
+                    else:
+                        self.log_test("Agent Fields Reset to Null", False,
+                                     f"agent_id: {assigned_agent_id}, agent_name: {assigned_agent_name}")
+                else:
+                    self.log_test("Verify Unassign Results", False, updated_inquiry)
+            else:
+                self.log_test("PUT /inquiries/{id}/unassign - API Call", False, result)
+        else:
+            self.log_test("Inquiry Unassign API Fix", False, 
+                         "No assigned inquiries found to test unassign")
+    
+    def test_agent_inquiry_status_flow(self):
+        """Test Agent Inquiry Status Update Flow: assigned → talked → visit_scheduled → visit_confirmed → closed"""
+        print("\n=== Testing Agent Inquiry Status Update Flow ===")
+        
+        # Get an inquiry to test status flow
+        success, inquiries = self.test_api_endpoint("GET", "/inquiries")
+        if success and inquiries:
+            inquiry_id = inquiries[0]['id']
+            
+            # Ensure inquiry is assigned first
+            success, result = self.test_api_endpoint("PUT", f"/inquiries/{inquiry_id}/assign",
+                                                   params={"agent_id": EXISTING_AGENT_ID})
+            if success:
+                self.log_test("Setup: Assign Inquiry", True, "Inquiry assigned for status flow test")
+                
+                # Test status transitions
+                status_flow = [
+                    ("assigned", "Initial assignment"),
+                    ("talked", "Agent talked to customer"),
+                    ("visit_scheduled", "Visit scheduled with customer"),
+                    ("visit_confirmed", "Visit confirmed by customer"),
+                    ("closed", "Inquiry closed successfully")
+                ]
+                
+                for status, message in status_flow:
+                    success, result = self.test_api_endpoint("POST", f"/inquiries/{inquiry_id}/log",
+                                                           params={
+                                                               "agent_id": EXISTING_AGENT_ID,
+                                                               "message": message,
+                                                               "new_status": status
+                                                           })
+                    if success:
+                        # Verify status was updated
+                        success_verify, inquiry = self.test_api_endpoint("GET", f"/inquiries/{inquiry_id}")
+                        if success_verify and inquiry.get('status') == status:
+                            self.log_test(f"Status Transition to '{status}'", True,
+                                         f"Successfully updated to '{status}'")
+                        else:
+                            self.log_test(f"Status Transition to '{status}'", False,
+                                         f"Status not updated correctly: {inquiry.get('status') if success_verify else 'API failed'}")
+                    else:
+                        self.log_test(f"Status Transition to '{status}'", False, result)
+            else:
+                self.log_test("Agent Inquiry Status Flow", False, "Failed to assign inquiry for testing")
+        else:
+            self.log_test("Agent Inquiry Status Flow", False, "No inquiries found to test status flow")
+
     def run_all_tests(self):
         """Run all API tests"""
-        print(f"Starting InstaMakaan Backend API Tests")
+        print(f"Starting InstaMakaan Backend API Tests - Admin Panel Fixes")
         print(f"Backend URL: {self.base_url}")
         print(f"Test Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         print("=" * 60)
         
-        # Test APIs based on priority and needs_retesting status
+        # Test specific fixes mentioned in review request
+        self.test_owner_property_count_fix()
+        self.test_inquiry_unassign_api_fix()
+        self.test_agent_inquiry_status_flow()
+        
+        # Also run basic API tests to ensure nothing is broken
         self.test_owner_crud_apis()
         self.test_agent_crud_apis()
         self.test_owner_dashboard_api()  # HIGH priority, needs_retesting: true
