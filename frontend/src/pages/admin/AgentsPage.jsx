@@ -342,17 +342,20 @@ const AgentsPage = () => {
                 filteredAgents.map((agent) => (
                   <TableRow key={agent.id}>
                     <TableCell>
-                      <div className="flex items-center gap-3">
+                      <Link
+                        to={`/admin/agents/${agent.id}/inquiries`}
+                        className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+                      >
                         <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center">
                           <UserCheck className="w-5 h-5 text-accent" />
                         </div>
                         <div>
-                          <p className="font-medium">{agent.name}</p>
+                          <p className="font-medium text-primary hover:underline">{agent.name}</p>
                           <p className="text-xs text-muted-foreground">
                             Since {format(new Date(agent.created_at), 'MMM yyyy')}
                           </p>
                         </div>
-                      </div>
+                      </Link>
                     </TableCell>
                     <TableCell>
                       <div className="space-y-1">
