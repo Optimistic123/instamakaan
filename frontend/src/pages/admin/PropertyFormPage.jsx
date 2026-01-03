@@ -46,6 +46,8 @@ const defaultFormData = {
   status: 'active',
   deposit: '',
   brokerage: '15 Days',
+  owner_id: '',
+  monthly_rent_amount: 0,
 };
 
 const featureOptions = [
