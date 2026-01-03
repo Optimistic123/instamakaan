@@ -2,22 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import {
   ArrowLeft,
   UserCheck,
@@ -29,15 +13,14 @@ import {
   Calendar,
   Eye,
   Loader2,
-  Send,
   PhoneCall,
   CalendarCheck,
   CheckCheck,
-  XCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import InquiryDetailDrawer from '@/components/admin/InquiryDetailDrawer';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
