@@ -201,7 +201,7 @@ const FAQPage = () => {
             Still have questions?
           </h2>
           <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
-            Can't find the answer you're looking for? Our team is here to help.
+            Can&apos;t find the answer you&apos;re looking for? Our team is here to help.
           </p>
           <Button variant="teal" size="lg" asChild>
             <Link to="/contact">Contact Us</Link>
