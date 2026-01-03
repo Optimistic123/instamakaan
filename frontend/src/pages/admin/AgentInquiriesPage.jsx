@@ -37,10 +37,7 @@ const AgentInquiriesPage = () => {
   const { agentId } = useParams();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [selectedInquiry, setSelectedInquiry] = useState(null);
-  const [isDetailOpen, setIsDetailOpen] = useState(false);
-  const [newMessage, setNewMessage] = useState('');
-  const [newStatus, setNewStatus] = useState('');
+  const [selectedInquiryId, setSelectedInquiryId] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
