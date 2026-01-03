@@ -323,27 +323,31 @@ const InquiriesPage = () => {
                         </div>
                       </TableCell>
                       <TableCell>
-                        {inquiry.assigned_agent_name ? (
-                          <div className="flex items-center gap-2">
-                            <UserCheck className="w-4 h-4 text-success" />
-                            <span className="text-sm">{inquiry.assigned_agent_name}</span>
-                          </div>
-                        ) : (
-                          <Select
-                            onValueChange={(agentId) => assignAgent(inquiry.id, agentId)}
-                          >
-                            <SelectTrigger className="w-36 h-8 text-xs">
+                        <Select
+                          value={inquiry.assigned_agent_id || ''}
+                          onValueChange={(agentId) => assignAgent(inquiry.id, agentId)}
+                        >
+                          <SelectTrigger className="w-40 h-8 text-xs">
+                            {inquiry.assigned_agent_name ? (
+                              <div className="flex items-center gap-1">
+                                <UserCheck className="w-3 h-3 text-success" />
+                                <span className="truncate">{inquiry.assigned_agent_name}</span>
+                              </div>
+                            ) : (
                               <SelectValue placeholder="Assign Agent" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {agents.map((agent) => (
-                                <SelectItem key={agent.id} value={agent.id}>
-                                  {agent.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        )}
+                            )}
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="unassign" className="text-muted-foreground">
+                              Unassign
+                            </SelectItem>
+                            {agents.map((agent) => (
+                              <SelectItem key={agent.id} value={agent.id}>
+                                {agent.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </TableCell>
                       <TableCell>
                         <p className="text-sm">
