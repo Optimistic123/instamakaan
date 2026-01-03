@@ -306,12 +306,11 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Owner Dashboard Page"
-    - "Agent Inquiries Page"
-    - "Property Form - Owner Assignment"
-    - "Owners Management Page - Full CRUD"
-    - "Agents Management Page - Full CRUD"
-  stuck_tasks: []
+    - "Owners Management Page - Fix Edit/View buttons"
+    - "Agents Management Page - Fix Edit/View buttons"
+  stuck_tasks:
+    - "Owners Management Page"
+    - "Agents Management Page"
   test_all: false
   test_priority: "high_first"
 
@@ -320,3 +319,5 @@ agent_communication:
     message: "Initial testing complete via screenshots and curl. Backend APIs verified working. Need comprehensive frontend testing for CRUD operations on Owners/Agents pages, Owner Dashboard, Agent Inquiries, and Property Form with Owner assignment."
   - agent: "testing"
     message: "✅ BACKEND TESTING COMPLETE: All backend APIs tested and working correctly. Owner CRUD (5/5 tests passed), Agent CRUD (5/5 tests passed), Owner Dashboard API (✅ working), Agent Inquiries API (✅ working), Inquiry Assignment (2/2 tests passed), Dashboard Stats (✅ working). Total: 15/15 tests passed. Backend is fully functional and ready for production."
+  - agent: "testing"
+    message: "✅ FRONTEND TESTING COMPLETE: Tested all admin panel functionality. CRITICAL ISSUES FOUND: Owners and Agents pages missing Edit/View action buttons in table rows. All other functionality working: Dashboard loads with stats, Owner Dashboard shows properties/earnings, Agent Inquiries page functional, Inquiries assignment works, Property Form owner assignment works perfectly. Need to fix missing action buttons for full CRUD operations."
