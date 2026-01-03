@@ -186,51 +186,63 @@ backend:
 frontend:
   - task: "Owners Management Page"
     implemented: true
-    working: true
+    working: false
     file: "/app/frontend/src/pages/admin/OwnersPage.jsx"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "Page loads correctly, shows owners list with CRUD actions"
+      - working: false
+        agent: "testing"
+        comment: "✅ Add Owner dialog works correctly, creates new owners. ❌ CRITICAL: Edit and View Dashboard buttons are not visible/clickable in the table. The edit (pencil) and view (eye) icons are missing from the Actions column, preventing CRUD operations."
 
   - task: "Agents Management Page"
     implemented: true
-    working: true
+    working: false
     file: "/app/frontend/src/pages/admin/AgentsPage.jsx"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "Page loads correctly, shows agents list with CRUD actions"
+      - working: false
+        agent: "testing"
+        comment: "✅ Add Agent dialog works correctly, creates new agents. ❌ CRITICAL: Edit and View Inquiries buttons are not visible/clickable in the table. The edit (pencil) and view (eye) icons are missing from the Actions column, preventing CRUD operations."
 
   - task: "Owner Dashboard Page"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/frontend/src/pages/admin/OwnerDashboardPage.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Page implemented, needs UI testing"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Owner Dashboard loads correctly with proper sections for Properties and Earnings. Shows owner info, stats cards (Total Properties, Active Listings, Total Earnings, This Month), and displays properties/earnings history sections as expected."
 
   - task: "Agent Inquiries Page"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/frontend/src/pages/admin/AgentInquiriesPage.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Page implemented, needs UI testing"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Agent Inquiries page loads correctly, shows agent info, total inquiries count, status summary, and assigned inquiries list with conversation logs. All functionality working as expected."
 
   - task: "Inquiries Page - Agent Assignment"
     implemented: true
@@ -238,23 +250,29 @@ frontend:
     file: "/app/frontend/src/pages/admin/InquiriesPage.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "Shows assigned agent and dropdown to assign new agents"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Inquiries page loads correctly with table. Agent assignment dropdown works for unassigned inquiries (found 1 unassigned with 2 available agents). View inquiry detail modal opens correctly showing assigned agent section and conversation history. Agent assignment functionality working properly."
 
   - task: "Property Form - Owner Assignment"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/frontend/src/pages/admin/PropertyFormPage.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Owner dropdown added, needs UI testing"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Property Form loads correctly with 'Assign to Owner' dropdown. Dropdown shows available owners (Rajesh Kumar, Test Owner) and allows selection. Owner assignment functionality working perfectly."
 
   - task: "Admin Layout - Navigation"
     implemented: true
