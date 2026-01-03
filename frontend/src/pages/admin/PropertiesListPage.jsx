@@ -234,7 +234,12 @@ const PropertiesListPage = () => {
                             )}
                           </div>
                           <div>
-                            <p className="font-medium line-clamp-1">{property.title}</p>
+                            <button
+                              onClick={() => setPreviewPropertyId(property.id)}
+                              className="font-medium line-clamp-1 text-primary hover:underline text-left"
+                            >
+                              {property.title}
+                            </button>
                             <p className="text-sm text-muted-foreground flex items-center gap-1">
                               <MapPin className="w-3 h-3" />
                               {property.location}
