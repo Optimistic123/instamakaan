@@ -661,6 +661,27 @@ async def assign_inquiry_to_agent(inquiry_id: str, agent_id: str):
     
     return {"message": f"Inquiry assigned to {agent.get('name')}"}
 
+# Unassign inquiry from agent
+@api_router.put("/inquiries/{inquiry_id}/unassign")
+async def unassign_inquiry(inquiry_id: str):
+    inquiry = await db.inquiries.find_one({"id": inquiry_id})
+    if not inquiry:
+        raise HTTPException(status_code=404, detail="Inquiry not found")
+    
+    await db.inquiries.update_one(
+        {"id": inquiry_id},
+        {
+            "$set": {
+                "assigned_agent_id": None,
+                "assigned_agent_name": None,
+                "status": "new",
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+    
+    return {"message": "Inquiry unassigned successfully"}
+
 # Add conversation log to inquiry
 @api_router.post("/inquiries/{inquiry_id}/log")
 async def add_conversation_log(inquiry_id: str, agent_id: str, message: str, new_status: Optional[str] = None):
