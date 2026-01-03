@@ -2,7 +2,7 @@ import "@/App.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/context/AuthContext";
-import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import ProtectedRoute, { RoleBasedRedirect } from "@/components/auth/ProtectedRoute";
 
 // Pages
 import HomePage from "@/pages/HomePage";
@@ -26,9 +26,19 @@ import PropertiesListPage from "@/pages/admin/PropertiesListPage";
 import PropertyFormPage from "@/pages/admin/PropertyFormPage";
 import InquiriesPage from "@/pages/admin/InquiriesPage";
 import OwnersPage from "@/pages/admin/OwnersPage";
-import OwnerDashboardPage from "@/pages/admin/OwnerDashboardPage";
+import AdminOwnerDashboardPage from "@/pages/admin/OwnerDashboardPage";
 import AgentsPage from "@/pages/admin/AgentsPage";
-import AgentInquiriesPage from "@/pages/admin/AgentInquiriesPage";
+import AdminAgentInquiriesPage from "@/pages/admin/AgentInquiriesPage";
+
+// Agent Pages
+import AgentLayout from "@/pages/agent/AgentLayout";
+import AgentDashboard from "@/pages/agent/AgentDashboard";
+
+// Owner Pages
+import OwnerLayout from "@/pages/owner/OwnerLayout";
+import OwnerDashboard from "@/pages/owner/OwnerDashboard";
+import OwnerProperties from "@/pages/owner/OwnerProperties";
+import OwnerEarnings from "@/pages/owner/OwnerEarnings";
 
 function App() {
   return (
@@ -51,11 +61,21 @@ function App() {
             <Route path="/auth/login" element={<LoginPage />} />
             <Route path="/auth/register" element={<RegisterPage />} />
             
-            {/* Admin Routes - Protected */}
+            {/* Role-based redirect after login */}
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <RoleBasedRedirect />
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* Admin Routes - Admin Only */}
             <Route
               path="/admin"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={["admin"]}>
                   <AdminLayout />
                 </ProtectedRoute>
               }
@@ -65,10 +85,36 @@ function App() {
               <Route path="properties/new" element={<PropertyFormPage />} />
               <Route path="properties/:id/edit" element={<PropertyFormPage />} />
               <Route path="owners" element={<OwnersPage />} />
-              <Route path="owners/:ownerId/dashboard" element={<OwnerDashboardPage />} />
+              <Route path="owners/:ownerId/dashboard" element={<AdminOwnerDashboardPage />} />
               <Route path="agents" element={<AgentsPage />} />
-              <Route path="agents/:agentId/inquiries" element={<AgentInquiriesPage />} />
+              <Route path="agents/:agentId/inquiries" element={<AdminAgentInquiriesPage />} />
               <Route path="inquiries" element={<InquiriesPage />} />
+            </Route>
+
+            {/* Agent Routes - Agent Only */}
+            <Route
+              path="/agent"
+              element={
+                <ProtectedRoute allowedRoles={["agent"]}>
+                  <AgentLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<AgentDashboard />} />
+            </Route>
+
+            {/* Owner Routes - Owner Only */}
+            <Route
+              path="/owner"
+              element={
+                <ProtectedRoute allowedRoles={["owner"]}>
+                  <OwnerLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<OwnerDashboard />} />
+              <Route path="properties" element={<OwnerProperties />} />
+              <Route path="earnings" element={<OwnerEarnings />} />
             </Route>
           </Routes>
         </BrowserRouter>
