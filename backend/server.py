@@ -1092,6 +1092,41 @@ async def get_dashboard_stats():
         recent_inquiries=recent
     )
 
+# ============== INITIAL SETUP ==============
+
+@api_router.post("/auth/setup")
+async def setup_admin():
+    """Create initial admin user if no users exist"""
+    user_count = await db.users.count_documents({})
+    if user_count > 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Setup already completed. Users already exist."
+        )
+    
+    # Create default admin user
+    admin_id = str(uuid.uuid4())
+    admin_user = {
+        "id": admin_id,
+        "email": "admin@instamakaan.com",
+        "name": "Admin User",
+        "role": "admin",
+        "password_hash": get_password_hash("admin123"),  # Default password
+        "status": "active",
+        "linked_id": None,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.users.insert_one(admin_user)
+    
+    return {
+        "message": "Admin user created successfully",
+        "email": "admin@instamakaan.com",
+        "password": "admin123",
+        "warning": "Please change the default password immediately!"
+    }
+
 # Include the router in the main app
 app.include_router(api_router)
 
