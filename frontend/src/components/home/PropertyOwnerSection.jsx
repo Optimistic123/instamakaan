@@ -47,7 +47,7 @@ export const PropertyOwnerSection = () => {
               InstaMakaan helps you transform your property into a hassle-free, high-earning asset. Get predictable income, guaranteed.
             </p>
             <h3 className="text-lg md:text-xl font-semibold text-foreground mb-6">
-              Unlock Your Property's Full Potential
+              Unlock Your Property&apos;s Full Potential
             </h3>
 
             <ul className="space-y-3 mb-8">
@@ -73,7 +73,7 @@ export const PropertyOwnerSection = () => {
               </Button>
               <Button variant="ghost" size="lg" className="text-foreground" asChild>
                 <Link to="/partner">
-                  Download FREE Owner's Brochure
+                  Download FREE Owner&apos;s Brochure
                 </Link>
               </Button>
             </div>

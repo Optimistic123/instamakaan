@@ -119,7 +119,7 @@ export const TestimonialsSection = () => {
                     {currentTestimonial.headline}
                   </h3>
                   <p className="text-muted-foreground italic mb-6 leading-relaxed">
-                    "{currentTestimonial.quote}"
+                    &quot;{currentTestimonial.quote}&quot;
                   </p>
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
