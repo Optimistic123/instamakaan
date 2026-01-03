@@ -78,6 +78,19 @@ if (config.enableVisualEdits && babelMetadataPlugin) {
 }
 
 webpackConfig.devServer = (devServerConfig) => {
+  // Fix webSocketURL.port to be a string (required by webpack-dev-server v4)
+  if (!devServerConfig.client) {
+    devServerConfig.client = {};
+  }
+  if (!devServerConfig.client.webSocketURL) {
+    devServerConfig.client.webSocketURL = {};
+  }
+  // Ensure port is a non-empty string - convert if it's a number or use dev server port
+  if (!devServerConfig.client.webSocketURL.port || typeof devServerConfig.client.webSocketURL.port !== 'string') {
+    const port = devServerConfig.port || process.env.PORT || 3000;
+    devServerConfig.client.webSocketURL.port = String(port);
+  }
+
   // Apply visual edits dev server setup only if enabled
   if (config.enableVisualEdits && setupDevServer) {
     devServerConfig = setupDevServer(devServerConfig);
