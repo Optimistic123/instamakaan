@@ -27,6 +27,16 @@ const sidebarItems = [
     icon: Building2,
   },
   {
+    name: 'Owners',
+    path: '/admin/owners',
+    icon: Users,
+  },
+  {
+    name: 'Agents',
+    path: '/admin/agents',
+    icon: Users,
+  },
+  {
     name: 'Inquiries',
     path: '/admin/inquiries',
     icon: MessageSquare,
