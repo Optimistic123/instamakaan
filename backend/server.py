@@ -307,7 +307,7 @@ async def create_owner(owner_data: OwnerCreate):
     await db.owners.insert_one(doc)
     return owner_obj
 
-@api_router.get("/owners", response_model=List[Owner])
+@api_router.get("/owners")
 async def get_owners(status: Optional[str] = None, limit: int = 100):
     query = {}
     if status:
