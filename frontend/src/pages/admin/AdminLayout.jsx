@@ -1,21 +1,32 @@
 import React, { useState } from 'react';
-import { Link, useLocation, Outlet, Navigate } from 'react-router-dom';
+import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   LayoutDashboard,
   Building2,
   MessageSquare,
-  Settings,
   Menu,
   LogOut,
-  ChevronDown,
   Plus,
   Home,
   Users,
   UserCheck,
+  User,
+  Settings,
+  ChevronDown,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 const sidebarItems = [
   {
