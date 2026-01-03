@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,93 +25,131 @@ import {
   Shield,
   Waves,
   TreePine,
-  Train,
-  GraduationCap,
-  Hospital,
-  ShoppingBag,
+  Loader2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
-// Mock property data
-const propertyData = {
-  id: 1,
-  type: 'pre-occupied',
-  title: 'Pre-Occupied Flat in Supertech Capetown',
-  location: 'Sector 74, Noida',
-  images: [
-    'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=1200&h=800&fit=crop',
-    'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=1200&h=800&fit=crop',
-    'https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=1200&h=800&fit=crop',
-    'https://images.unsplash.com/photo-1560185007-cde436f6a4d0?w=1200&h=800&fit=crop',
-  ],
-  pricing: {
-    rent: '15,000',
-    deposit: '2 Months',
-    serviceFee: '5,000',
-  },
-  overview: {
-    status: 'Ready to Move',
-    furnishing: 'Fully Furnished',
-    occupancy: 'Single/Double Sharing',
-    gender: 'Female Only',
-  },
-  amenities: [
-    { icon: Wifi, name: 'High-Speed WiFi' },
-    { icon: Shield, name: 'Professional Housekeeping' },
-    { icon: Phone, name: '24/7 Support' },
-    { icon: Car, name: 'Washing Machine' },
-    { icon: Waves, name: 'RO Water' },
-    { icon: Building2, name: 'Smart Lock' },
-  ],
-  description: "This isn't just a room; it's a lifestyle. Experience true Sukoon in this fully-managed, all-inclusive home. Forget chasing landlords or splitting bills—we handle it all. Your monthly rent covers WiFi, housekeeping, maintenance, and access to a vibrant community. Just move in, plug in, and start living.",
-  rules: [
-    'Guests are welcome (9 AM – 9 PM). Overnight guests allowed with prior notice.',
-    'Quiet Hours: 11 PM – 7 AM for the comfort of all residents.',
-    'No smoking permitted inside rooms or common areas.',
-    'Be respectful of all residents.',
-    'No pets allowed in shared living spaces.',
-  ],
-  beds: 1,
-  baths: 1,
-  area: '450 sq.ft.',
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+
+const amenityIcons = {
+  'High-Speed WiFi': Wifi,
+  'WiFi': Wifi,
+  'Parking': Car,
+  'Gymnasium': Dumbbell,
+  'Security': Shield,
+  'Swimming Pool': Waves,
+  'Garden': TreePine,
+  'default': CheckCircle2,
 };
-
-const relatedProperties = [
-  {
-    id: 2,
-    title: 'Managed Studio in Gaur City',
-    location: 'Greater Noida West',
-    price: '12,000',
-    image: 'https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=400&h=300&fit=crop',
-  },
-  {
-    id: 3,
-    title: '2 BHK in Nirala Aspire',
-    location: 'Sector 16, Greater Noida',
-    price: '22,000',
-    image: 'https://images.unsplash.com/photo-1560185007-cde436f6a4d0?w=400&h=300&fit=crop',
-  },
-];
 
 const PropertyDetailPage = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const [property, setProperty] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isFavorite, setIsFavorite] = useState(false);
   const [formData, setFormData] = useState({ name: '', phone: '', whatsapp: false });
+  const [submitting, setSubmitting] = useState(false);
 
-  const property = propertyData; // In real app, fetch by id
+  useEffect(() => {
+    fetchProperty();
+  }, [id]);
 
-  const nextImage = () =>
-    setCurrentImageIndex((prev) => (prev + 1) % property.images.length);
-  const prevImage = () =>
-    setCurrentImageIndex(
-      (prev) => (prev - 1 + property.images.length) % property.images.length
-    );
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    alert('Visit scheduled! We will contact you shortly.');
+  const fetchProperty = async () => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/properties/${id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setProperty(data);
+      } else {
+        toast.error('Property not found');
+        navigate('/properties');
+      }
+    } catch (error) {
+      console.error('Error fetching property:', error);
+      toast.error('Failed to load property');
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const nextImage = () => {
+    if (property?.images?.length > 0) {
+      setCurrentImageIndex((prev) => (prev + 1) % property.images.length);
+    }
+  };
+
+  const prevImage = () => {
+    if (property?.images?.length > 0) {
+      setCurrentImageIndex((prev) => (prev - 1 + property.images.length) % property.images.length);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/inquiries`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          phone: formData.phone,
+          property_id: id,
+          inquiry_type: 'schedule_visit',
+          whatsapp_updates: formData.whatsapp,
+          message: `Visit request for: ${property?.title}`,
+        }),
+      });
+
+      if (response.ok) {
+        toast.success('Visit scheduled! We will contact you shortly.');
+        setFormData({ name: '', phone: '', whatsapp: false });
+      } else {
+        throw new Error('Failed to submit');
+      }
+    } catch (error) {
+      console.error('Error submitting inquiry:', error);
+      toast.error('Failed to schedule visit. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="min-h-[60vh] flex items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!property) {
+    return (
+      <Layout>
+        <div className="min-h-[60vh] flex items-center justify-center">
+          <div className="text-center">
+            <Building2 className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+            <p className="text-muted-foreground">Property not found</p>
+            <Button variant="link" asChild className="mt-2">
+              <Link to="/properties">Browse Properties</Link>
+            </Button>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  const images = property.images?.length > 0
+    ? property.images.map(img => img.startsWith('http') ? img : `${BACKEND_URL}${img}`)
+    : ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=1200&h=800&fit=crop'];
 
   return (
     <Layout>
@@ -136,24 +174,28 @@ const PropertyDetailPage = () => {
               {/* Image Gallery */}
               <div className="relative rounded-2xl overflow-hidden bg-muted aspect-[16/10]">
                 <img
-                  src={property.images[currentImageIndex]}
+                  src={images[currentImageIndex]}
                   alt={property.title}
                   className="w-full h-full object-cover"
                 />
 
                 {/* Navigation */}
-                <button
-                  onClick={prevImage}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center text-foreground hover:bg-card transition-colors"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={nextImage}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center text-foreground hover:bg-card transition-colors"
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </button>
+                {images.length > 1 && (
+                  <>
+                    <button
+                      onClick={prevImage}
+                      className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center text-foreground hover:bg-card transition-colors"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={nextImage}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center text-foreground hover:bg-card transition-colors"
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                  </>
+                )}
 
                 {/* Actions */}
                 <div className="absolute top-4 right-4 flex gap-2">
@@ -169,23 +211,27 @@ const PropertyDetailPage = () => {
                 </div>
 
                 {/* Badge */}
-                <div className="absolute top-4 left-4 px-3 py-1 bg-primary text-primary-foreground text-sm font-semibold rounded-full">
-                  Managed Home
-                </div>
+                {property.is_managed && (
+                  <div className="absolute top-4 left-4 px-3 py-1 bg-primary text-primary-foreground text-sm font-semibold rounded-full">
+                    Managed Home
+                  </div>
+                )}
 
                 {/* Thumbnails */}
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-                  {property.images.map((_, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setCurrentImageIndex(index)}
-                      className={cn(
-                        'w-2 h-2 rounded-full transition-all',
-                        index === currentImageIndex ? 'w-8 bg-card' : 'bg-card/50'
-                      )}
-                    />
-                  ))}
-                </div>
+                {images.length > 1 && (
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                    {images.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setCurrentImageIndex(index)}
+                        className={cn(
+                          'w-2 h-2 rounded-full transition-all',
+                          index === currentImageIndex ? 'w-8 bg-card' : 'bg-card/50'
+                        )}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Title & Location */}
@@ -221,54 +267,74 @@ const PropertyDetailPage = () => {
                   <h2 className="text-lg font-semibold text-foreground mb-4">Pricing</h2>
                   <div className="grid sm:grid-cols-3 gap-4">
                     <div>
-                      <p className="text-sm text-muted-foreground">Per Bed Rent</p>
-                      <p className="text-xl font-bold text-primary">₹{property.pricing.rent}/month</p>
+                      <p className="text-sm text-muted-foreground">{property.price_label}</p>
+                      <p className="text-xl font-bold text-primary">₹{property.price}{property.property_type !== 'buy' && '/month'}</p>
                     </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Security Deposit</p>
-                      <p className="text-lg font-semibold text-foreground">{property.pricing.deposit}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">One-Time Service Fee</p>
-                      <p className="text-lg font-semibold text-foreground">₹{property.pricing.serviceFee}</p>
-                    </div>
+                    {property.deposit && (
+                      <div>
+                        <p className="text-sm text-muted-foreground">Security Deposit</p>
+                        <p className="text-lg font-semibold text-foreground">{property.deposit}</p>
+                      </div>
+                    )}
+                    {property.brokerage && (
+                      <div>
+                        <p className="text-sm text-muted-foreground">Brokerage</p>
+                        <p className="text-lg font-semibold text-foreground">{property.brokerage}</p>
+                      </div>
+                    )}
                   </div>
-                  <p className="text-xs text-muted-foreground mt-4">
-                    *Prices are indicative and subject to change.
-                  </p>
                 </CardContent>
               </Card>
 
               {/* Amenities */}
-              <Card className="bg-card border-0 shadow-card">
-                <CardContent className="p-6">
-                  <h2 className="text-lg font-semibold text-foreground mb-4">Amenities</h2>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                    {property.amenities.map((amenity) => (
-                      <div key={amenity.name} className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                          <amenity.icon className="w-5 h-5 text-primary" />
-                        </div>
-                        <span className="text-sm text-foreground">{amenity.name}</span>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+              {property.amenities?.length > 0 && (
+                <Card className="bg-card border-0 shadow-card">
+                  <CardContent className="p-6">
+                    <h2 className="text-lg font-semibold text-foreground mb-4">Amenities</h2>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                      {property.amenities.map((amenity) => {
+                        const Icon = amenityIcons[amenity] || amenityIcons.default;
+                        return (
+                          <div key={amenity} className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                              <Icon className="w-5 h-5 text-primary" />
+                            </div>
+                            <span className="text-sm text-foreground">{amenity}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Overview */}
               <Card className="bg-card border-0 shadow-card">
                 <CardContent className="p-6">
                   <h2 className="text-lg font-semibold text-foreground mb-4">Overview</h2>
                   <div className="grid grid-cols-2 gap-4">
-                    {Object.entries(property.overview).map(([key, value]) => (
-                      <div key={key}>
-                        <p className="text-sm text-muted-foreground capitalize">
-                          {key.replace(/([A-Z])/g, ' $1')}
-                        </p>
-                        <p className="font-medium text-foreground">{value}</p>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Status</p>
+                      <p className="font-medium text-foreground capitalize">{property.status}</p>
+                    </div>
+                    {property.furnishing && (
+                      <div>
+                        <p className="text-sm text-muted-foreground">Furnishing</p>
+                        <p className="font-medium text-foreground capitalize">{property.furnishing?.replace('-', ' ')}</p>
                       </div>
-                    ))}
+                    )}
+                    {property.preferred_tenant && (
+                      <div>
+                        <p className="text-sm text-muted-foreground">Preferred Tenant</p>
+                        <p className="font-medium text-foreground capitalize">{property.preferred_tenant}</p>
+                      </div>
+                    )}
+                    {property.gender_preference && property.gender_preference !== 'any' && (
+                      <div>
+                        <p className="text-sm text-muted-foreground">Gender Preference</p>
+                        <p className="font-medium text-foreground capitalize">{property.gender_preference}</p>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -283,20 +349,24 @@ const PropertyDetailPage = () => {
                 </CardContent>
               </Card>
 
-              {/* Housing Rules */}
-              <Card className="bg-card border-0 shadow-card">
-                <CardContent className="p-6">
-                  <h2 className="text-lg font-semibold text-foreground mb-4">Housing Rules</h2>
-                  <ul className="space-y-3">
-                    {property.rules.map((rule, index) => (
-                      <li key={index} className="flex items-start gap-3">
-                        <CheckCircle2 className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                        <span className="text-muted-foreground">{rule}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
+              {/* Features */}
+              {property.features?.length > 0 && (
+                <Card className="bg-card border-0 shadow-card">
+                  <CardContent className="p-6">
+                    <h2 className="text-lg font-semibold text-foreground mb-4">Features</h2>
+                    <div className="flex flex-wrap gap-2">
+                      {property.features.map((feature) => (
+                        <span
+                          key={feature}
+                          className="px-3 py-1.5 bg-primary/10 text-primary rounded-lg text-sm font-medium"
+                        >
+                          {feature}
+                        </span>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
 
             {/* Right Column - Sticky Form */}
@@ -334,44 +404,30 @@ const PropertyDetailPage = () => {
                           Get updates over WhatsApp
                         </label>
                       </div>
-                      <Button type="submit" variant="teal" size="lg" className="w-full">
-                        <Calendar className="w-5 h-5 mr-2" />
+                      <Button type="submit" variant="teal" size="lg" className="w-full" disabled={submitting}>
+                        {submitting ? (
+                          <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                        ) : (
+                          <Calendar className="w-5 h-5 mr-2" />
+                        )}
                         Schedule a Visit
                       </Button>
                     </form>
                   </CardContent>
                 </Card>
 
-                {/* Related Properties */}
+                {/* Contact Card */}
                 <Card className="bg-card border-0 shadow-card">
-                  <CardContent className="p-6">
-                    <h3 className="text-lg font-semibold text-foreground mb-4">
-                      People also search for...
-                    </h3>
-                    <div className="space-y-4">
-                      {relatedProperties.map((prop) => (
-                        <Link
-                          key={prop.id}
-                          to={`/property/${prop.id}`}
-                          className="flex gap-3 group"
-                        >
-                          <img
-                            src={prop.image}
-                            alt={prop.title}
-                            className="w-20 h-16 rounded-lg object-cover"
-                          />
-                          <div>
-                            <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors line-clamp-1">
-                              {prop.title}
-                            </p>
-                            <p className="text-xs text-muted-foreground">{prop.location}</p>
-                            <p className="text-sm font-semibold text-primary">
-                              ₹{prop.price}/mo
-                            </p>
-                          </div>
-                        </Link>
-                      ))}
-                    </div>
+                  <CardContent className="p-6 text-center">
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Have questions? Call us directly
+                    </p>
+                    <Button variant="outline" size="lg" className="w-full" asChild>
+                      <a href="tel:+919999900000">
+                        <Phone className="w-5 h-5 mr-2" />
+                        +91 99999 00000
+                      </a>
+                    </Button>
                   </CardContent>
                 </Card>
               </div>
