@@ -322,6 +322,27 @@ const PropertyFormPage = () => {
                 </Select>
               </div>
               <div>
+                <Label htmlFor="owner_id">Assign to Owner *</Label>
+                <Select
+                  value={formData.owner_id}
+                  onValueChange={(value) => handleChange('owner_id', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select owner" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {owners.map((owner) => (
+                      <SelectItem key={owner.id} value={owner.id}>
+                        {owner.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div>
                 <Label htmlFor="status">Status</Label>
                 <Select
                   value={formData.status}
@@ -337,6 +358,16 @@ const PropertyFormPage = () => {
                     <SelectItem value="sold">Sold</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+              <div>
+                <Label htmlFor="monthly_rent_amount">Monthly Rent Amount (for earnings)</Label>
+                <Input
+                  id="monthly_rent_amount"
+                  type="number"
+                  value={formData.monthly_rent_amount}
+                  onChange={(e) => handleChange('monthly_rent_amount', parseFloat(e.target.value) || 0)}
+                  placeholder="e.g., 35000"
+                />
               </div>
             </div>
 
