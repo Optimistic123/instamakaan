@@ -6,7 +6,8 @@
 # Including: Backend, Frontend, Database, and Sample Data
 #===============================================================================
 
-set -e  # Exit on any error
+# Note: We don't use 'set -e' here because we want to handle errors gracefully
+# during dependency installation attempts
 
 # Colors for output
 RED='\033[0;31m'
@@ -63,6 +64,235 @@ check_command() {
     fi
 }
 
+detect_os() {
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        echo "macos"
+    elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        # Detect Linux distribution
+        if [ -f /etc/os-release ]; then
+            . /etc/os-release
+            echo "$ID"
+        else
+            echo "linux"
+        fi
+    else
+        echo "unknown"
+    fi
+}
+
+#===============================================================================
+# Dependency Installation Functions
+#===============================================================================
+
+install_homebrew() {
+    if check_command brew; then
+        return 0
+    fi
+    
+    print_step "Installing Homebrew..."
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    
+    # Add Homebrew to PATH for Apple Silicon Macs
+    if [[ -f "/opt/homebrew/bin/brew" ]]; then
+        eval "$(/opt/homebrew/bin/brew shellenv)"
+    elif [[ -f "/usr/local/bin/brew" ]]; then
+        eval "$(/usr/local/bin/brew shellenv)"
+    fi
+    
+    if check_command brew; then
+        print_success "Homebrew installed successfully"
+        return 0
+    else
+        print_error "Failed to install Homebrew"
+        return 1
+    fi
+}
+
+install_nodejs() {
+    local os=$(detect_os)
+    
+    print_step "Installing Node.js..."
+    
+    if [[ "$os" == "macos" ]]; then
+        if ! check_command brew; then
+            install_homebrew || return 1
+        fi
+        brew install node
+    elif [[ "$os" == "ubuntu" ]] || [[ "$os" == "debian" ]]; then
+        curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+        sudo apt-get install -y nodejs
+    elif [[ "$os" == "fedora" ]] || [[ "$os" == "rhel" ]] || [[ "$os" == "centos" ]]; then
+        curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash -
+        sudo yum install -y nodejs
+    elif [[ "$os" == "arch" ]]; then
+        sudo pacman -S --noconfirm nodejs npm
+    else
+        print_error "Automatic Node.js installation not supported for this OS"
+        print_info "Please install Node.js manually from https://nodejs.org/"
+        return 1
+    fi
+    
+    if check_command node; then
+        NODE_VERSION=$(node --version)
+        print_success "Node.js installed: $NODE_VERSION"
+        return 0
+    else
+        print_error "Failed to install Node.js"
+        return 1
+    fi
+}
+
+install_python() {
+    local os=$(detect_os)
+    
+    print_step "Installing Python 3..."
+    
+    if [[ "$os" == "macos" ]]; then
+        if ! check_command brew; then
+            install_homebrew || return 1
+        fi
+        brew install python3
+    elif [[ "$os" == "ubuntu" ]] || [[ "$os" == "debian" ]]; then
+        sudo apt-get update
+        sudo apt-get install -y python3 python3-pip python3-venv
+    elif [[ "$os" == "fedora" ]] || [[ "$os" == "rhel" ]] || [[ "$os" == "centos" ]]; then
+        sudo yum install -y python3 python3-pip
+    elif [[ "$os" == "arch" ]]; then
+        sudo pacman -S --noconfirm python python-pip
+    else
+        print_error "Automatic Python installation not supported for this OS"
+        print_info "Please install Python 3 manually from https://python.org/"
+        return 1
+    fi
+    
+    if check_command python3; then
+        PYTHON_VERSION=$(python3 --version)
+        print_success "Python installed: $PYTHON_VERSION"
+        return 0
+    else
+        print_error "Failed to install Python"
+        return 1
+    fi
+}
+
+install_docker() {
+    local os=$(detect_os)
+    
+    print_step "Installing Docker..."
+    
+    if [[ "$os" == "macos" ]]; then
+        if ! check_command brew; then
+            install_homebrew || return 1
+        fi
+        brew install --cask docker
+        print_warning "Docker Desktop installed. Please start it manually from Applications."
+        print_info "After starting Docker Desktop, run this script again."
+        return 1
+    elif [[ "$os" == "ubuntu" ]] || [[ "$os" == "debian" ]]; then
+        # Remove old versions
+        sudo apt-get remove -y docker docker-engine docker.io containerd runc 2>/dev/null || true
+        
+        # Install Docker
+        sudo apt-get update
+        sudo apt-get install -y ca-certificates curl gnupg lsb-release
+        sudo mkdir -p /etc/apt/keyrings
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+        sudo apt-get update
+        sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+        sudo usermod -aG docker $USER
+        print_warning "Docker installed. You may need to log out and back in for group changes to take effect."
+    elif [[ "$os" == "fedora" ]]; then
+        sudo dnf install -y docker
+        sudo systemctl enable docker
+        sudo systemctl start docker
+        sudo usermod -aG docker $USER
+    elif [[ "$os" == "arch" ]]; then
+        sudo pacman -S --noconfirm docker
+        sudo systemctl enable docker
+        sudo systemctl start docker
+        sudo usermod -aG docker $USER
+    else
+        print_error "Automatic Docker installation not supported for this OS"
+        print_info "Please install Docker manually from https://docs.docker.com/get-docker/"
+        return 1
+    fi
+    
+    if check_command docker; then
+        print_success "Docker installed successfully"
+        return 0
+    else
+        print_error "Failed to install Docker"
+        return 1
+    fi
+}
+
+install_mongodb() {
+    local os=$(detect_os)
+    
+    print_step "Installing MongoDB..."
+    
+    if [[ "$os" == "macos" ]]; then
+        if ! check_command brew; then
+            install_homebrew || return 1
+        fi
+        brew tap mongodb/brew
+        brew install mongodb-community@7.0
+        brew services start mongodb-community@7.0
+    elif [[ "$os" == "ubuntu" ]]; then
+        # Install MongoDB for Ubuntu
+        curl -fsSL https://www.mongodb.org/static/pgp/server-7.0.asc | sudo gpg -o /usr/share/keyrings/mongodb-server-7.0.gpg --dearmor
+        echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-7.0.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/7.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-7.0.list
+        sudo apt-get update
+        sudo apt-get install -y mongodb-org
+        sudo systemctl enable mongod
+        sudo systemctl start mongod
+    elif [[ "$os" == "debian" ]]; then
+        curl -fsSL https://www.mongodb.org/static/pgp/server-7.0.asc | sudo gpg -o /usr/share/keyrings/mongodb-server-7.0.gpg --dearmor
+        echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-7.0.gpg ] https://repo.mongodb.org/apt/debian bookworm/mongodb-org/7.0 main" | sudo tee /etc/apt/sources.list.d/mongodb-org-7.0.list
+        sudo apt-get update
+        sudo apt-get install -y mongodb-org
+        sudo systemctl enable mongod
+        sudo systemctl start mongod
+    elif [[ "$os" == "fedora" ]]; then
+        sudo tee /etc/yum.repos.d/mongodb-org-7.0.repo <<EOF
+[mongodb-org-7.0]
+name=MongoDB Repository
+baseurl=https://repo.mongodb.org/yum/redhat/\$releasever/mongodb-org/7.0/x86_64/
+gpgcheck=1
+enabled=1
+gpgkey=https://www.mongodb.org/static/pgp/server-7.0.asc
+EOF
+        sudo yum install -y mongodb-org
+        sudo systemctl enable mongod
+        sudo systemctl start mongod
+    else
+        print_warning "Automatic MongoDB installation not supported for this OS"
+        print_info "Will attempt to use Docker for MongoDB instead"
+        if ! check_command docker; then
+            if install_docker; then
+                USE_DOCKER_MONGO=true
+                return 0
+            fi
+        else
+            USE_DOCKER_MONGO=true
+            return 0
+        fi
+        return 1
+    fi
+    
+    # Wait a moment for MongoDB to start
+    sleep 3
+    
+    if check_command mongod; then
+        print_success "MongoDB installed successfully"
+        return 0
+    else
+        print_error "Failed to install MongoDB"
+        return 1
+    fi
+}
+
 #===============================================================================
 # Prerequisite Checks
 #===============================================================================
@@ -70,7 +300,21 @@ check_command() {
 check_prerequisites() {
     print_header "Checking Prerequisites"
     
-    local missing_deps=()
+    local install_missing=false
+    local os=$(detect_os)
+    
+    # Ask user if they want automatic installation
+    echo ""
+    print_info "This script can automatically install missing dependencies."
+    echo -e -n "${YELLOW}Would you like to install missing dependencies automatically? (y/n): ${NC}"
+    read -r response
+    if [[ "$response" =~ ^[Yy]$ ]]; then
+        install_missing=true
+        print_success "Automatic installation enabled"
+    else
+        print_info "Automatic installation disabled. Script will only check for dependencies."
+    fi
+    echo ""
     
     # Check Node.js
     print_step "Checking Node.js..."
@@ -78,8 +322,26 @@ check_prerequisites() {
         NODE_VERSION=$(node --version)
         print_success "Node.js found: $NODE_VERSION"
     else
-        print_error "Node.js not found"
-        missing_deps+=("nodejs")
+        print_warning "Node.js not found"
+        if [ "$install_missing" = true ]; then
+            if install_nodejs; then
+                print_success "Node.js installed successfully"
+            else
+                print_error "Failed to install Node.js automatically"
+                print_info "Please install Node.js manually from https://nodejs.org/"
+                exit 1
+            fi
+        else
+            print_error "Node.js is required but not installed"
+            print_info "Install manually: https://nodejs.org/"
+            exit 1
+        fi
+    fi
+    
+    # Check npm (comes with Node.js)
+    if ! check_command npm; then
+        print_error "npm not found (should come with Node.js)"
+        exit 1
     fi
     
     # Check Yarn
@@ -88,14 +350,13 @@ check_prerequisites() {
         YARN_VERSION=$(yarn --version)
         print_success "Yarn found: $YARN_VERSION"
     else
-        print_warning "Yarn not found - will install via npm"
-        if check_command npm; then
-            print_step "Installing Yarn globally..."
-            npm install -g yarn
-            print_success "Yarn installed"
+        print_warning "Yarn not found - installing via npm..."
+        npm install -g yarn
+        if check_command yarn; then
+            print_success "Yarn installed successfully"
         else
-            print_error "npm not found - cannot install Yarn"
-            missing_deps+=("yarn")
+            print_error "Failed to install Yarn"
+            exit 1
         fi
     fi
     
@@ -105,8 +366,20 @@ check_prerequisites() {
         PYTHON_VERSION=$(python3 --version)
         print_success "Python found: $PYTHON_VERSION"
     else
-        print_error "Python3 not found"
-        missing_deps+=("python3")
+        print_warning "Python3 not found"
+        if [ "$install_missing" = true ]; then
+            if install_python; then
+                print_success "Python installed successfully"
+            else
+                print_error "Failed to install Python automatically"
+                print_info "Please install Python manually from https://python.org/"
+                exit 1
+            fi
+        else
+            print_error "Python3 is required but not installed"
+            print_info "Install manually: https://python.org/"
+            exit 1
+        fi
     fi
     
     # Check pip
@@ -114,36 +387,63 @@ check_prerequisites() {
     if check_command pip3 || check_command pip; then
         print_success "pip found"
     else
-        print_error "pip not found"
-        missing_deps+=("pip")
+        print_warning "pip not found - installing..."
+        if [ "$install_missing" = true ]; then
+            python3 -m ensurepip --upgrade || python3 -m pip --version || {
+                print_error "Failed to install pip"
+                print_info "Please install pip manually"
+                exit 1
+            }
+            print_success "pip installed"
+        else
+            print_error "pip is required but not installed"
+            exit 1
+        fi
     fi
     
-    # Check MongoDB
+    # Check MongoDB or Docker
     print_step "Checking MongoDB..."
     if check_command mongod; then
-        print_success "MongoDB found"
+        print_success "MongoDB found locally"
     elif check_command docker; then
         print_warning "MongoDB not found locally, but Docker is available"
         print_info "Will use Docker to run MongoDB"
         USE_DOCKER_MONGO=true
     else
-        print_warning "MongoDB not found - you'll need to install it or use MongoDB Atlas"
-        print_info "See: https://www.mongodb.com/try/download/community"
-    fi
-    
-    # Report missing dependencies
-    if [ ${#missing_deps[@]} -gt 0 ]; then
-        echo ""
-        print_error "Missing required dependencies: ${missing_deps[*]}"
-        echo ""
-        echo "Please install the missing dependencies and run this script again."
-        echo ""
-        echo "Installation guides:"
-        echo "  - Node.js: https://nodejs.org/"
-        echo "  - Python:  https://python.org/"
-        echo "  - MongoDB: https://www.mongodb.com/try/download/community"
-        echo ""
-        exit 1
+        print_warning "MongoDB not found locally and Docker is not available"
+        if [ "$install_missing" = true ]; then
+            echo ""
+            print_info "Choose MongoDB installation method:"
+            echo "  1) Install MongoDB locally"
+            echo "  2) Install Docker (recommended for easier setup)"
+            echo -e -n "${YELLOW}Enter choice (1 or 2): ${NC}"
+            read -r mongo_choice
+            
+            if [ "$mongo_choice" = "2" ]; then
+                if install_docker; then
+                    USE_DOCKER_MONGO=true
+                    print_success "Docker installed - will use Docker for MongoDB"
+                else
+                    print_error "Failed to install Docker"
+                    print_info "Please install Docker manually or MongoDB from https://www.mongodb.com/try/download/community"
+                    exit 1
+                fi
+            else
+                if install_mongodb; then
+                    print_success "MongoDB installed successfully"
+                else
+                    print_error "Failed to install MongoDB automatically"
+                    print_info "Please install MongoDB manually from https://www.mongodb.com/try/download/community"
+                    print_info "Or install Docker and we'll use it for MongoDB"
+                    exit 1
+                fi
+            fi
+        else
+            print_error "MongoDB or Docker is required but not installed"
+            print_info "Install MongoDB: https://www.mongodb.com/try/download/community"
+            print_info "Or install Docker: https://docs.docker.com/get-docker/"
+            exit 1
+        fi
     fi
     
     print_success "All prerequisites satisfied!"
@@ -157,7 +457,25 @@ setup_mongodb() {
     print_header "Setting Up MongoDB"
     
     # Check if MongoDB is already running
-    if nc -z localhost 27017 2>/dev/null; then
+    # Try multiple methods to check if port is open
+    local mongo_running=false
+    
+    if command -v nc &> /dev/null; then
+        if nc -z localhost 27017 2>/dev/null; then
+            mongo_running=true
+        fi
+    elif command -v telnet &> /dev/null; then
+        if timeout 1 bash -c "cat < /dev/null > /dev/tcp/localhost/27017" 2>/dev/null; then
+            mongo_running=true
+        fi
+    elif command -v curl &> /dev/null; then
+        # Try to connect to MongoDB
+        if timeout 1 bash -c "cat < /dev/null > /dev/tcp/localhost/27017" 2>/dev/null; then
+            mongo_running=true
+        fi
+    fi
+    
+    if [ "$mongo_running" = true ]; then
         print_success "MongoDB is already running on port 27017"
         return 0
     fi
@@ -182,7 +500,13 @@ setup_mongodb() {
         # Wait for MongoDB to start
         print_step "Waiting for MongoDB to start..."
         for i in {1..30}; do
-            if nc -z localhost 27017 2>/dev/null; then
+            # Try multiple methods to check if port is open
+            if command -v nc &> /dev/null; then
+                if nc -z localhost 27017 2>/dev/null; then
+                    print_success "MongoDB started successfully"
+                    return 0
+                fi
+            elif timeout 1 bash -c "cat < /dev/null > /dev/tcp/localhost/27017" 2>/dev/null; then
                 print_success "MongoDB started successfully"
                 return 0
             fi
@@ -209,7 +533,17 @@ setup_mongodb() {
         
         sleep 3
         
-        if nc -z localhost 27017 2>/dev/null; then
+        # Check if MongoDB started
+        local mongo_started=false
+        if command -v nc &> /dev/null; then
+            if nc -z localhost 27017 2>/dev/null; then
+                mongo_started=true
+            fi
+        elif timeout 1 bash -c "cat < /dev/null > /dev/tcp/localhost/27017" 2>/dev/null; then
+            mongo_started=true
+        fi
+        
+        if [ "$mongo_started" = true ]; then
             print_success "MongoDB started successfully"
             return 0
         fi
@@ -376,7 +710,16 @@ echo ""
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # Check if MongoDB is running
-if ! nc -z localhost 27017 2>/dev/null; then
+MONGO_RUNNING=false
+if command -v nc &> /dev/null; then
+    if nc -z localhost 27017 2>/dev/null; then
+        MONGO_RUNNING=true
+    fi
+elif timeout 1 bash -c "cat < /dev/null > /dev/tcp/localhost/27017" 2>/dev/null; then
+    MONGO_RUNNING=true
+fi
+
+if [ "$MONGO_RUNNING" = false ]; then
     echo "MongoDB is not running. Attempting to start..."
     
     # Try Docker
