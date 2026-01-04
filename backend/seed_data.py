@@ -14,12 +14,19 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from uuid import uuid4
 from datetime import datetime, timezone
 from dotenv import load_dotenv
+from passlib.context import CryptContext
 
 # Load environment variables
 load_dotenv()
 
 MONGO_URL = os.getenv("MONGO_URL", "mongodb://localhost:27017")
 DB_NAME = os.getenv("DB_NAME", "instamakaan")
+
+# Password hashing
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def get_password_hash(password: str) -> str:
+    return pwd_context.hash(password)
 
 
 async def seed_database():
@@ -44,6 +51,7 @@ async def seed_database():
     await db.owners.delete_many({})
     await db.agents.delete_many({})
     await db.inquiries.delete_many({})
+    await db.users.delete_many({})
     print("   Done!\n")
     
     # Create Owners
@@ -345,6 +353,73 @@ async def seed_database():
     await db.inquiries.insert_many(inquiries)
     print(f"   ✅ Created {len(inquiries)} inquiries")
     
+    # Create Users (Admin, Owner, Agent)
+    print("👥 Creating users...")
+    users = [
+        # Admin User
+        {
+            "id": str(uuid4()),
+            "name": "Admin User",
+            "email": "admin@instamakaan.com",
+            "password_hash": get_password_hash("admin123"),
+            "role": "admin",
+            "status": "active",
+            "linked_id": None,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        },
+        # Owner User (linked to first owner - Rajesh Kumar)
+        {
+            "id": str(uuid4()),
+            "name": owners[0]["name"],
+            "email": owners[0]["email"],
+            "password_hash": get_password_hash("owner123"),
+            "role": "owner",
+            "status": "active",
+            "linked_id": owners[0]["id"],
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        },
+        # Second Owner User (linked to second owner - Priya Sharma)
+        {
+            "id": str(uuid4()),
+            "name": owners[1]["name"],
+            "email": owners[1]["email"],
+            "password_hash": get_password_hash("owner123"),
+            "role": "owner",
+            "status": "active",
+            "linked_id": owners[1]["id"],
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        },
+        # Agent User (linked to first agent - Amit Singh)
+        {
+            "id": str(uuid4()),
+            "name": agents[0]["name"],
+            "email": "amit@instamakaan.com",  # Different email for login
+            "password_hash": get_password_hash("agent123"),
+            "role": "agent",
+            "status": "active",
+            "linked_id": agents[0]["id"],
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        },
+        # Second Agent User (linked to second agent - Neha Gupta)
+        {
+            "id": str(uuid4()),
+            "name": agents[1]["name"],
+            "email": "neha@instamakaan.com",  # Different email for login
+            "password_hash": get_password_hash("agent123"),
+            "role": "agent",
+            "status": "active",
+            "linked_id": agents[1]["id"],
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        },
+    ]
+    await db.users.insert_many(users)
+    print(f"   ✅ Created {len(users)} users")
+    
     # Print summary
     print("\n" + "="*50)
     print("🎉 DATABASE SEEDED SUCCESSFULLY!")
@@ -354,9 +429,22 @@ async def seed_database():
     print(f"   • Agents:     {len(agents)}")
     print(f"   • Properties: {len(properties)}")
     print(f"   • Inquiries:  {len(inquiries)}")
+    print(f"   • Users:      {len(users)}")
+    print(f"\n🔐 Login Credentials:")
+    print(f"   ┌─────────────────────────────────────────────────────┐")
+    print(f"   │ Role   │ Email                    │ Password       │")
+    print(f"   ├─────────────────────────────────────────────────────┤")
+    print(f"   │ Admin  │ admin@instamakaan.com    │ admin123       │")
+    print(f"   │ Owner  │ rajesh@example.com       │ owner123       │")
+    print(f"   │ Owner  │ priya@example.com        │ owner123       │")
+    print(f"   │ Agent  │ amit@instamakaan.com     │ agent123       │")
+    print(f"   │ Agent  │ neha@instamakaan.com     │ agent123       │")
+    print(f"   └─────────────────────────────────────────────────────┘")
     print(f"\n🌐 You can now access:")
     print(f"   • Frontend:    http://localhost:3000")
     print(f"   • Admin Panel: http://localhost:3000/admin")
+    print(f"   • Owner Portal: http://localhost:3000/owner")
+    print(f"   • Agent Portal: http://localhost:3000/agent")
     print(f"   • API Docs:    http://localhost:8001/docs")
     print()
     
@@ -375,6 +463,7 @@ async def clear_database():
     await db.owners.delete_many({})
     await db.agents.delete_many({})
     await db.inquiries.delete_many({})
+    await db.users.delete_many({})
     print("✅ Database cleared!")
     
     client.close()
