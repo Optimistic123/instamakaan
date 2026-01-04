@@ -78,6 +78,9 @@ if (config.enableVisualEdits && babelMetadataPlugin) {
 }
 
 webpackConfig.devServer = (devServerConfig) => {
+  // Note: This function is only called during development (yarn start), not during production builds
+  // webpack-dev-server is not used in production, so this code never runs in production builds
+  
   // Fix webSocketURL.port to be a string (required by webpack-dev-server v4)
   if (!devServerConfig.client) {
     devServerConfig.client = {};
