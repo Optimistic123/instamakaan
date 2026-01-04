@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import CustomIcon from '@/components/CustomIcon';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Menu, X, Home, Users, Building2, Phone, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -49,9 +50,10 @@ export const Header = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 shrink-0">
             <div className="flex items-center">
-              <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-primary flex items-center justify-center">
+              {/* <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-primary flex items-center justify-center">
                 <span className="text-primary-foreground font-bold text-lg md:text-xl">IM</span>
-              </div>
+              </div> */}
+              <CustomIcon src="/images/orglogo.png" className="h-12 w-12 sm:h-14 sm:w-14" alt="InstaMakaan Logo" />
               <div className="ml-2 hidden sm:block">
                 <span className="text-lg md:text-xl font-bold text-primary">Insta</span>
                 <span className="text-lg md:text-xl font-bold text-accent">Makaan</span>
