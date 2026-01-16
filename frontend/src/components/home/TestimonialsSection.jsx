@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';  
 import { ChevronLeft, ChevronRight, Play, Building2, User, Quote } from 'lucide-react';
 import { cn } from '@/lib/utils';
 

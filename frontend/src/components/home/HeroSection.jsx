@@ -1,135 +1,266 @@
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Search, Building2, Home, Key, MapPin } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import React, { useState, useRef, useEffect } from 'react';
+import { Search, MapPin, ChevronDown } from 'lucide-react';
 
-const tabContent = {
-  rent: {
-    headline: 'Find Your Rental Sukoon.',
-    subheadline: 'Professionally managed, verified homes for a hassle-free experience.',
-    placeholder: 'Search by location or society in Noida & Gr. Noida',
-    icon: Key,
-  },
-  'pre-occupied': {
-    headline: 'The Managed Home Experience.',
-    subheadline: 'Our premium, full-service rental. We handle everything.',
-    placeholder: 'Search managed homes in Noida & Gr. Noida',
-    icon: Home,
-  },
-  buy: {
-    headline: 'Discover Your Future Property.',
-    subheadline: 'Verified listings and expert guidance for buyers and investors.',
-    placeholder: 'Search properties to buy in Noida & Gr. Noida',
-    icon: Building2,
-  },
+/* ---------- CUSTOM DROPDOWN ---------- */
+const Dropdown = ({ icon: Icon, label, value, setValue, options }) => {
+	const [open, setOpen] = useState(false);
+	const ref = useRef(null);
+
+	useEffect(() => {
+		const handler = (e) => {
+			if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+		};
+		document.addEventListener('mousedown', handler);
+		return () => document.removeEventListener('mousedown', handler);
+	}, []);
+
+	return (
+		<div ref={ref} className="relative w-full">
+			<button
+				onClick={() => setOpen(!open)}
+				className="
+					w-full h-11 px-3 flex items-center justify-between
+					rounded-xl border
+					bg-white dark:bg-[#0b1220]
+					border-slate-300/50 dark:border-white/10
+					text-slate-900 dark:text-slate-100
+					text-sm transition-all
+					hover:shadow-md
+				"
+			>
+				<div className="flex items-center gap-2">
+					{Icon && <Icon className="w-4 h-4 text-slate-400" />}
+					<span className={value ? '' : 'text-slate-400'}>
+						{value || label}
+					</span>
+				</div>
+				<ChevronDown
+					className={`w-4 h-4 transition-transform ${open ? 'rotate-180' : ''}`}
+				/>
+			</button>
+
+			<div
+				className={`
+					absolute left-0 right-0 mt-2 z-50
+					rounded-xl overflow-hidden
+					bg-white dark:bg-[#0b1220]
+					border border-slate-200 dark:border-white/10
+					shadow-xl
+					transition-all duration-200
+					${open ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}
+				`}
+			>
+				{options.map((opt) => (
+					<div
+						key={opt}
+						onClick={() => {
+							setValue(opt);
+							setOpen(false);
+						}}
+						className="
+							px-4 py-3 cursor-pointer text-sm
+							text-slate-800 dark:text-slate-200
+							hover:bg-slate-100 dark:hover:bg-white/10
+						"
+					>
+						{opt}
+					</div>
+				))}
+			</div>
+		</div>
+	);
 };
 
+/* ---------- HERO SECTION ---------- */
 export const HeroSection = () => {
-  const [activeTab, setActiveTab] = useState('rent');
-  const [searchQuery, setSearchQuery] = useState('');
-  const content = tabContent[activeTab];
-  const IconComponent = content.icon;
+	const [activeTab, setActiveTab] = useState('rent');
 
-  return (
-    <section className="relative min-h-[85vh] md:min-h-[90vh] flex items-center overflow-hidden hero-gradient">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-[0.03]">
-        <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-          <defs>
-            <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
-              <path d="M 10 0 L 0 0 0 10" fill="none" stroke="currentColor" strokeWidth="0.5"/>
-            </pattern>
-          </defs>
-          <rect width="100" height="100" fill="url(#grid)"/>
-        </svg>
-      </div>
+	const [city, setCity] = useState('');
+	const [budget, setBudget] = useState('');
+	const [bhk, setBhk] = useState('');
 
-      {/* Decorative Elements */}
-      <div className="absolute top-20 left-10 w-32 h-32 md:w-64 md:h-64 rounded-full bg-primary/5 blur-3xl" />
-      <div className="absolute bottom-20 right-10 w-40 h-40 md:w-80 md:h-80 rounded-full bg-accent/5 blur-3xl" />
+	// NEW STATES (added only)
+	const [searchText, setSearchText] = useState('');
+	const [rentType, setRentType] = useState('Full House');
+	const [buyType, setBuyType] = useState('Full House');
+	const [propertyStatus, setPropertyStatus] = useState('');
+	const [preType, setPreType] = useState('Rent');
+	const [commercialType, setCommercialType] = useState('');
 
-      {/* Background Illustration */}
-      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1/2 h-2/3 opacity-10 hidden lg:block">
-        <div className="relative w-full h-full">
-          <IconComponent className="w-full h-full text-primary" strokeWidth={0.5} />
-        </div>
-      </div>
+	const tabText = {
+		rent: {
+			title: 'Find Your Rental ',
+			highlight: 'Sukoon.',
+			subtitle: 'Calm, friendly, aspirational living spaces for your comfort.',
+		},
+		buy: {
+			title: 'Discover Your Future ',
+			highlight: 'Property.',
+			subtitle: 'Verified listings and expert guidance for buyers.',
+		},
+		pre: {
+			title: 'Managed Homes for ',
+			highlight: 'Living.',
+			subtitle: 'Premium pre-occupied homes with full service.',
+		},
+	};
 
-      <div className="container-custom relative z-10">
-        <div className="max-w-3xl mx-auto text-center">
-          {/* Tabs */}
-          <div className="mb-8 md:mb-10">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="inline-flex">
-              <TabsList className="h-auto p-1 bg-muted/50 backdrop-blur-sm rounded-xl">
-                <TabsTrigger
-                  value="buy"
-                  className={cn(
-                    'px-4 py-2.5 md:px-6 md:py-3 rounded-lg text-sm md:text-base font-semibold transition-all',
-                    'data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md'
-                  )}
-                >
-                  BUY
-                </TabsTrigger>
-                <TabsTrigger
-                  value="pre-occupied"
-                  className={cn(
-                    'px-4 py-2.5 md:px-6 md:py-3 rounded-lg text-sm md:text-base font-semibold transition-all',
-                    'data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md'
-                  )}
-                >
-                  PRE-OCCUPIED
-                </TabsTrigger>
-                <TabsTrigger
-                  value="rent"
-                  className={cn(
-                    'px-4 py-2.5 md:px-6 md:py-3 rounded-lg text-sm md:text-base font-semibold transition-all',
-                    'data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md'
-                  )}
-                >
-                  RENT
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </div>
+	const bgImages = {
+		rent: '/images/hero-rent.jpg',
+		buy: '/images/hero-buy.jpg',
+		pre: '/images/hero-pre.jpg',
+	};
 
-          {/* Dynamic Headlines */}
-          <div className="mb-6 md:mb-8 animate-fade-in" key={activeTab}>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-primary mb-4 leading-tight">
-              {content.headline}
-            </h1>
-            <p className="text-base md:text-lg text-muted-foreground max-w-xl mx-auto">
-              {content.subheadline}
-            </p>
-          </div>
+	return (
+		<section className="relative min-h-screen flex items-center justify-center overflow-hidden -mt-14">
+			<div
+				className="absolute inset-0 bg-cover bg-center scale-105"
+				style={{ backgroundImage: `url('${bgImages[activeTab]}')` }}
+			/>
 
-          {/* Search Bar */}
-          <div className="max-w-2xl mx-auto">
-            <div className="relative bg-card rounded-2xl shadow-elevated p-2 md:p-3">
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-                <div className="relative flex-1">
-                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <Input
-                    type="text"
-                    placeholder={content.placeholder}
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-12 pr-4 h-12 md:h-14 text-base border-0 bg-secondary/50 rounded-xl focus-visible:ring-2 focus-visible:ring-primary"
-                  />
-                </div>
-                <Button variant="teal" size="lg" className="h-12 md:h-14 px-6 md:px-8 rounded-xl">
-                  <Search className="w-5 h-5 mr-2" />
-                  Search
-                </Button>
-              </div>
-            </div>
-            <p className="mt-4 text-sm text-muted-foreground">
-              <span className="text-foreground/70">Last Search / Recommended</span>
-            </p>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
+			<div className="absolute inset-0 bg-gradient-to-b from-white/70 via-white/60 to-white/80 dark:from-[#0b1220]/90 dark:via-[#0b1220]/85 dark:to-[#0b1220]/95" />
+
+			{/* TABS */}
+			<div className="absolute top-28 left-1/2 -translate-x-1/2 z-20">
+				<div className="flex bg-white/90 dark:bg-[#0b1220]/80 backdrop-blur-xl rounded-full p-1 border border-slate-200/50 dark:border-white/10 shadow-lg">
+					{['rent', 'pre', 'buy'].map((tab) => (
+						<button
+							key={tab}
+							onClick={() => setActiveTab(tab)}
+							className={`px-5 py-2 rounded-full text-sm font-medium transition-all
+								${
+									activeTab === tab
+										? 'bg-teal-600 text-white shadow'
+										: 'text-slate-700 dark:text-slate-300'
+								}`}
+						>
+							{tab === 'rent' ? 'Rent' : tab === 'pre' ? 'Pre-Occupied' : 'Buy'}
+						</button>
+					))}
+				</div>
+			</div>
+
+			{/* CONTENT */}
+			<div className="relative z-10 text-center max-w-6xl px-4">
+				<h1 className="text-4xl md:text-5xl font-bold text-slate-900 dark:text-white">
+					{tabText[activeTab].title}
+					<span className="text-teal-600 dark:text-teal-400">
+						{tabText[activeTab].highlight}
+					</span>
+				</h1>
+
+				<p className="mt-4 text-slate-600 dark:text-slate-300">
+					{tabText[activeTab].subtitle}
+				</p>
+
+				{/* SEARCH BAR */}
+				<div className="mt-10 bg-white/90 dark:bg-[#0b1220]/85 backdrop-blur-xl shadow-2xl rounded-2xl px-6 py-6 flex flex-wrap md:flex-nowrap gap-4 items-center border border-slate-200/50 dark:border-white/10 max-w-6xl mx-auto">
+					{/* RADIO BUTTONS (SEARCH SE PEHLE) */}
+					{activeTab === 'rent' && (
+						<div className="flex gap-4 text-sm text-slate-700 dark:text-slate-200">
+							{['Full House', 'Flatmate'].map((o) => (
+								<label key={o} className="flex items-center gap-1">
+									<input
+										type="radio"
+										checked={rentType === o}
+										onChange={() => setRentType(o)}
+									/>
+									{o}
+								</label>
+							))}
+						</div>
+					)}
+
+					{activeTab === 'buy' && (
+						<div className="flex gap-4 text-sm text-slate-700 dark:text-slate-200">
+							{['Full House', 'Land / Plot'].map((o) => (
+								<label key={o} className="flex items-center gap-1">
+									<input
+										type="radio"
+										checked={buyType === o}
+										onChange={() => setBuyType(o)}
+									/>
+									{o}
+								</label>
+							))}
+						</div>
+					)}
+
+					{activeTab === 'pre' && (
+						<div className="flex gap-4 text-sm text-slate-700 dark:text-slate-200">
+							{['Rent', 'Buy'].map((o) => (
+								<label key={o} className="flex items-center gap-1">
+									<input
+										type="radio"
+										checked={preType === o}
+										onChange={() => setPreType(o)}
+									/>
+									{o}
+								</label>
+							))}
+						</div>
+					)}
+
+					{/* CITY */}
+					<Dropdown
+						icon={MapPin}
+						label="City"
+						value={city}
+						setValue={setCity}
+						options={['Noida', 'Greater Noida']}
+					/>
+
+					{/* SEARCH INPUT */}
+					<input
+						value={searchText}
+						onChange={(e) => setSearchText(e.target.value)}
+						placeholder="Search localities or landmarks"
+						className="h-11 px-4 rounded-xl border bg-white dark:bg-[#0b1220] text-sm w-full md:w-72"
+					/>
+
+					{/* DROPDOWNS */}
+					{activeTab === 'rent' && (
+						<Dropdown
+							label="BHK Type"
+							value={bhk}
+							setValue={setBhk}
+							options={['1 BHK', '2 BHK', '3 BHK', '4 BHK']}
+						/>
+					)}
+
+					{activeTab === 'buy' && (
+						<Dropdown
+							label="Property Status"
+							value={propertyStatus}
+							setValue={setPropertyStatus}
+							options={['Ready to Move', 'Under Construction']}
+						/>
+					)}
+
+					{activeTab === 'pre' && (
+						<Dropdown
+							label="Property Type"
+							value={commercialType}
+							setValue={setCommercialType}
+							options={[
+								'Office Space',
+								'Co-Working',
+								'Shop',
+								'Showroom',
+								'Industrial Building',
+								'Industrial Shed',
+								'Godown / Warehouse',
+								'Other Business',
+							]}
+						/>
+					)}
+
+					<button className="h-11 px-8 bg-yellow-400 hover:bg-yellow-500 text-black rounded-xl font-semibold flex items-center gap-2 shadow-md">
+						<Search className="w-4 h-4" />
+						Search
+					</button>
+				</div>
+			</div>
+		</section>
+	);
 };

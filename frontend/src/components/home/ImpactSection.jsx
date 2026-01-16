@@ -3,6 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Building2, Key, Handshake, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+
 const stats = [
   {
     icon: Building2,
@@ -45,10 +46,7 @@ const CountUp = ({ end, duration = 2000, suffix = '' }) => {
       { threshold: 0.1 }
     );
 
-    if (ref.current) {
-      observer.observe(ref.current);
-    }
-
+    if (ref.current) observer.observe(ref.current);
     return () => observer.disconnect();
   }, []);
 
@@ -60,23 +58,22 @@ const CountUp = ({ end, duration = 2000, suffix = '' }) => {
       if (!startTime) startTime = currentTime;
       const progress = Math.min((currentTime - startTime) / duration, 1);
       setCount(Math.floor(progress * end));
-      if (progress < 1) {
-        requestAnimationFrame(animate);
-      }
+      if (progress < 1) requestAnimationFrame(animate);
     };
     requestAnimationFrame(animate);
   }, [isVisible, end, duration]);
 
   return (
     <span ref={ref}>
-      {count.toLocaleString()}{suffix}
+      {count.toLocaleString()}
+      {suffix}
     </span>
   );
 };
 
 export const ImpactSection = () => {
   return (
-    <section className="py-16 md:py-24 section-light">
+    <section className="impact-section py-16 md:py-24 section-light">
       <div className="container-custom">
         {/* Header */}
         <div className="text-center mb-12 md:mb-16">
